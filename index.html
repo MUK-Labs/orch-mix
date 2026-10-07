@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; media-src blob:; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <title>Orch / Mix — local orchestral balance lab</title>
+  <link rel="stylesheet" href="app/style.css">
+  <script defer src="app/model.js"></script>
+  <script defer src="app/audio-engine.js"></script>
+  <script defer src="app/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="Orch Mix home"><span class="brand-mark" aria-hidden="true">◒</span><span>ORCH <i>/</i> MIX</span></a>
+    <span class="header-caption">THE ORCHESTRAL BALANCE LAB</span>
+    <div class="header-actions"><span class="local-badge"><b></b> On your computer</span><button id="sources-button" class="quiet">Audio sources ↗</button><button id="help-button" class="icon" aria-label="How to use Orch Mix">?</button><button id="fullscreen-button" class="icon" aria-label="Toggle fullscreen"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 7V2h5m6 0h5v5m0 6v5h-5m-6 0H2v-5"/></svg></button></div>
+  </header>
+  <main>
+    <section class="workspace-heading">
+      <div><p class="eyebrow">LISTEN · SHAPE · DISCOVER</p><h1 id="piece-title">Mix your orchestra.</h1><p id="piece-subtitle" class="subtle">A seat at the centre of the sound.</p></div>
+      <div class="workspace-actions"><div class="mode-switch" role="group" aria-label="Listening mode"><button id="explore-mode" class="active" aria-pressed="true">Explore</button><button id="challenge-mode" aria-pressed="false" disabled>Balance challenge</button></div><button id="library-button" class="button secondary">+ Load stems</button></div>
+    </section>
+    <section class="exercise-bar" aria-label="Exercise controls">
+      <div><span id="mode-label" class="mode-label">EXPLORATION</span><span id="exercise-instruction">Turn a wheel. Follow a voice. Hear the whole.</span></div>
+      <div class="exercise-actions"><span id="score" class="score" hidden></span><button id="reference-button" class="quiet" disabled aria-pressed="false">Listen to reference</button><button id="set-reference" class="quiet" disabled>Set reference</button><button id="scramble-button" class="quiet" hidden>New challenge</button><button id="reveal-button" class="button small" hidden>Reveal balance</button></div>
+    </section>
+    <section class="orchestra" aria-label="Orchestra seating and instrument controls">
+      <div class="family-legend" aria-label="Instrument families"><span class="strings">● Strings</span><span class="woodwinds">● Woodwinds</span><span class="brass">● Brass</span><span class="percussion">● Percussion & harp</span></div>
+      <div class="stage" id="stage">
+        <svg class="stage-lines" viewBox="0 0 1000 560" preserveAspectRatio="none" aria-hidden="true"><path d="M 50 55 Q 500 455 950 55"/><path d="M 20 140 Q 500 590 980 140"/><path d="M 5 235 Q 500 705 995 235"/><path d="M 90 330 Q 500 750 910 330"/><path class="centre-line" d="M500 350 V525"/></svg>
+        <div id="instrument-cards"></div>
+        <div class="conductor" aria-hidden="true"><span>✦</span> YOU ARE HERE</div>
+        <div id="welcome" class="welcome"><span class="welcome-icon">♫</span><h2>Your orchestra.<br>Your listening space.</h2><p>Open synchronized stems from your computer.<br>Audio stays with you, even while you mix.</p><div><button id="welcome-load" class="button">Load local audio</button><button id="demo-button" class="button secondary">Try the sound demo</button></div><small>The demo is generated sound, not an orchestral recording.</small></div>
+      </div>
+      <div class="stage-footer"><span id="track-count">12 orchestral positions</span><span id="stage-hint">Wheels control playback balance, not performed dynamics.</span><button id="save-button" class="quiet" disabled>Save session settings ↓</button></div>
+    </section>
+    <section class="transport" aria-label="Playback controls">
+      <button id="play-button" class="play-button" aria-label="Play" disabled>▶</button><button id="restart-button" class="icon" aria-label="Restart excerpt" disabled>↤</button>
+      <div class="timeline"><div class="timeline-label"><span id="time-current">0:00</span><span id="excerpt-label">SELECT AN EXCERPT TO BEGIN</span><span id="time-total">0:00</span></div><input id="seek" type="range" min="0" max="1" value="0" step="0.01" aria-label="Playback position" disabled></div>
+      <button id="loop-button" class="icon active" aria-label="Loop excerpt" aria-pressed="true">↻</button>
+      <div class="master"><label for="master-volume">MASTER <output id="master-value">−12 dB</output></label><input id="master-volume" type="range" min="-36" max="0" step="1" value="-12"></div>
+    </section>
+    <div class="status-line"><span id="status" role="status" aria-live="polite">Ready when you are.</span><button id="reset-button" class="quiet" disabled>Reset to reference</button></div>
+  </main>
+  <dialog id="library-dialog" aria-labelledby="library-title">
+    <div class="dialog-heading"><div><p class="eyebrow">YOUR LOCAL LIBRARY</p><h2 id="library-title">Bring the orchestra in.</h2></div><button class="close icon" data-close="library-dialog" aria-label="Close audio loader">×</button></div>
+    <p class="subtle">Choose matching tracks from one performance. Select an excerpt; all parts start together.</p>
+    <div id="drop-zone" class="drop-zone"><strong>Drop audio files here</strong><span>or choose files / a folder. No upload.</span><div><button id="pick-files" class="button secondary">Choose audio files</button><button id="pick-folder" class="button secondary">Choose folder</button><button id="pick-session" class="quiet">Open session JSON</button></div></div>
+    <input id="audio-files" type="file" accept="audio/*,.wav,.flac,.mp3,.aif,.aiff,.ogg,.opus,.m4a" multiple hidden><input id="audio-folder" type="file" webkitdirectory multiple hidden><input id="session-file" type="file" accept="application/json,.json" hidden>
+    <div class="load-settings"><label class="title-field">Piece / session name<input id="session-title" placeholder="e.g. Beethoven · Symphony No. 4"></label><label>Start (seconds)<input id="excerpt-start" type="number" min="0" step="0.1" value="0"></label><label>Length (seconds)<input id="excerpt-duration" type="number" min="1" max="120" step="1" value="30"></label></div>
+    <p class="tip">Large PCM WAV files: only the excerpt is read. For long FLAC / MP3 files, use the included preparation script to make short WAVs first.</p>
+    <div id="file-list" class="file-list"><p class="empty-message">Your selected instruments will appear here.</p></div>
+    <p id="load-message" class="load-message" role="status"></p><progress id="load-progress" max="1" value="0" hidden></progress>
+    <div class="dialog-footer"><span>Audio files are never included in saved settings.</span><button id="load-button" class="button" disabled>Open excerpt</button></div>
+  </dialog>
+  <dialog id="sources-dialog" aria-labelledby="sources-title"><div class="dialog-heading"><div><p class="eyebrow">START WITH A RECORDING</p><h2 id="sources-title">An orchestra, in parts.</h2></div><button class="close icon" data-close="sources-dialog" aria-label="Close audio sources">×</button></div>
+    <p class="subtle">Download from the original publisher, extract the files on your computer, then load one matching set of stems.</p>
+    <a class="source-card" href="https://openmusic.academy/docs/4HAB9wcKyiXNGNsmkEFRXD" target="_blank" rel="noreferrer"><span class="source-number">01</span><div><strong>Operation Beethoven ↗</strong><p>Symphony No. 4, first movement · 12 section tracks</p><small>Real orchestra · WAV / MP3 · CC BY 4.0</small></div><span class="tag">START HERE</span></a>
+    <a class="source-card" href="https://zenodo.org/records/17347681" target="_blank" rel="noreferrer"><span class="source-number">02</span><div><strong>The Spheres ↗</strong><p>Mozart No. 40 & Tchaikovsky’s Romeo and Juliet</p><small>Choose StereoMix.zip · real orchestra · CC BY-SA 4.0</small></div></a>
+    <a class="source-card" href="https://zenodo.org/records/13759492" target="_blank" rel="noreferrer"><span class="source-number">03</span><div><strong>SynthSOD ↗</strong><p>Rendered orchestral repertoire, with separate instruments</p><small>Choose one piece and one microphone folder · CC BY-SA 4.0 dataset</small></div></a>
+    <p class="tip">The full download guide is in <a href="docs/AUDIO-SOURCES.md" target="_blank">docs/AUDIO-SOURCES.md</a>. Local playback avoids publishing audio; source licences still govern use. Only import files you are entitled to use.</p>
+  </dialog>
+  <dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-heading"><h2 id="help-title">Listen your way into the orchestra.</h2><button class="close icon" data-close="help-dialog" aria-label="Close help">×</button></div>
+    <ol class="help-list"><li><strong>Load an excerpt.</strong> Choose synchronized local stems. The first 30 seconds are selected by default; change the start to reach another passage.</li><li><strong>Explore.</strong> Drag the narrow wheels, scroll over them or use the arrow keys. Use S to solo a part and M to mute it. The coloured light follows that part’s audible energy.</li><li><strong>Choose a reference.</strong> The original stem levels are the default. Make your own mix and select “Set reference” to teach a different interpretation.</li><li><strong>Challenge your ears.</strong> The app offsets every part’s level. Adjust the wheels to recover the reference. Their starting position gives no answer away.</li><li><strong>Reveal.</strong> See each part’s relative error in dB. The score ignores a common volume change across all parts; it judges balance. Silent parts are omitted.</li></ol>
+    <p class="tip">pp–ff is an intuitive playback scale. Turning down a recorded forte does not turn it into a performed piano: its timbre remains. The reference is a chosen interpretation, not a universal correct orchestration.</p><p class="subtle">Space: play / pause · Esc: close a panel · Settings JSON stores filenames and reference levels only. Re-select audio files when reopening.</p>
+    <p class="credits">Concept: Adrián Artacho · Orch / Mix</p>
+  </dialog>
+  <noscript>This local audio application needs JavaScript enabled.</noscript>
+</body>
+</html>
