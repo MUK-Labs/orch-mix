@@ -96,3 +96,7 @@ Browser smoke tests use Playwright as an optional development dependency; see `t
 ## Credits
 
 Concept and teaching context: **Adrián Artacho**. Audio recordings belong to their respective contributors and licensors; the [source guide](docs/AUDIO-SOURCES.md) lists provenance and required credits. This repository does not include those recordings.
+
+---
+
+## 📝 [ToDo](https://trello.com/c/6JXoSz8Z/99-mitmachstation-bei-open-house-am-1510)
