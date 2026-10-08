@@ -64,6 +64,18 @@ python3 scripts/prepare_audio.py "/path/to/one-piece/StereoMix" \
 
 This writes aligned short WAVs and a settings JSON, without normalizing individual stems. Choose the prepared folder to load them together. Python is only a preparation/launch convenience; mixing runs in the browser. See [the local-use guide](docs/LOCAL-USE.md) for full instructions.
 
+### Convert a whole folder to WAV
+
+With **FFmpeg installed**, open Terminal in the folder containing your stems and run this one-liner (Bash or zsh on macOS/Linux):
+
+```sh
+mkdir -p wav && for f in *; do [ -f "$f" ] || continue; case "$f" in *.mp3|*.flac|*.aif|*.aiff|*.m4a|*.ogg|*.wav) ffmpeg -nostdin -n -i "$f" -vn -c:a pcm_s16le -ar 48000 "wav/${f%.*}.wav";; esac; done
+```
+
+This converts matching files in the current folder into **48 kHz, 16-bit PCM WAVs** inside a `wav` subfolder. It keeps the full recording length and channel count, applies no normalization, and leaves the originals untouched. It does not recurse into subfolders. Existing outputs are skipped; files sharing a basename (such as `flute.mp3` and `flute.flac`) share one output name.
+
+Load the new `wav` folder in Orch Mix. If you already have a session JSON, copy it into that folder and update its `file` entries to the new WAV filenames. The command converts audio only; the Python helper above additionally trims a common excerpt and generates session settings.
+
 ## Save a session
 
 **Save session settings** downloads a small `.orchmix.json` containing the piece title, excerpt, instrument labels, local filenames, seating and reference gains. It contains no audio. Save it beside the stems, then choose that folder to reopen the setup. The app automatically opens a folder’s single `.orchmix.json`; if several are present, choose the intended one with **Open session JSON**. You can also open a session JSON and select its matching audio files separately.
