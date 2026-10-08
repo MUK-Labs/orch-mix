@@ -107,6 +107,34 @@ test('exports metadata without mutating or retaining local audio objects', () =>
   assert.equal(result.excerpt.start, 2);
 });
 
+test('optional seating is validated without changing existing version-one sessions', () => {
+  assert.deepEqual(model.validateSession(session()), session());
+  for (const row of ['front', 'middle', 'back', 'rear']) {
+    const value = session();
+    value.tracks[0].seat = { row, order: -1000, weight: 0.25, arbitrarySvg: '<path>' };
+    assert.deepEqual(model.validateSession(value).tracks[0].seat, { row, order: -1000, weight: 0.25 });
+  }
+  const upper = session();
+  upper.tracks[0].seat = { row: 'front', order: 1000, weight: 4 };
+  assert.deepEqual(model.validateSession(upper).tracks[0].seat, upper.tracks[0].seat);
+  for (const seat of [null, [], 'front', {}, { row: 'stage' }, { row: 'front', order: NaN }, { row: 'front', order: 1001 }, { row: 'front', order: -1001 }, { row: 'front', order: '2' }, { row: 'front', weight: Infinity }, { row: 'front', weight: 0.24 }, { row: 'front', weight: 4.1 }, { row: 'front', weight: null }]) {
+    const value = session(); value.tracks[0].seat = seat;
+    assert.throws(() => model.validateSession(value), undefined, JSON.stringify(seat));
+  }
+});
+
+test('seat settings survive local file matching and settings-only session export', () => {
+  const value = session();
+  value.tracks[0].seat = { row: 'back', order: -2, weight: 1.5 };
+  const file = { name: 'flute.wav', privateBytes: 'never export' };
+  const matched = model.findFiles(model.validateSession(value).tracks, [file]);
+  assert.deepEqual(matched.matches[0].seat, value.tracks[0].seat);
+  const saved = model.makeSession(value.title, matched.matches, value.excerpt);
+  assert.deepEqual(saved, value);
+  assert.notEqual(saved.tracks[0].seat, value.tracks[0].seat);
+  assert.equal(JSON.stringify(saved).includes('never export'), false);
+});
+
 test('balance score measures relationships independently of master level', () => {
   const reference = { strings: -2, winds: -4, brass: -7 };
   const actual = { strings: 0, winds: -2, brass: -5 };

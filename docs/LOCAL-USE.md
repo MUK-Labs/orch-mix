@@ -9,9 +9,17 @@ Orch Mix is an offline browser instrument for Adrián Artacho's orchestration te
 3. Try the built-in synthesized demonstration, or choose your locally downloaded audio files. The demonstration is original synthetic material, not an orchestra recording.
 4. Use the setup controls to choose a common excerpt, check each instrument's name and family, and establish the reference balance before starting the listening challenge.
 
-The thin vertical wheels change playback gain. The family colours are strings blue, woodwinds green, brass red, and percussion/harp orange. The *pp–ff* scale describes relative playback level: it does not turn a performed fortissimo timbre into a performed pianissimo. The challenge compares a mix against a chosen reference, not a uniquely correct orchestration.
+The large orchestra map shows one polygon per instrumental group. Each polygon brightens with that stem’s current energy, using strings blue, woodwinds green, brass red, and percussion/harp orange. The separate mixer below provides one vertical fader per stem. Faders change playback gain. The *pp–ff* scale describes relative playback level: it does not turn a performed fortissimo timbre into a performed pianissimo. The challenge compares a mix against a chosen reference, not a uniquely correct orchestration.
 
 Select files from **one piece, one take, one microphone/mix perspective**. They need the same time origin. The app schedules stems together but cannot repair originally unsynchronized recordings. Do not normalize each file independently; that would discard the relative balance. Source naming can be ambiguous, so check the automatically assigned labels and colours.
+
+## Keep the piece’s setup with its stems
+
+Put one `session.orchmix.json` beside the audio files, then use **Load stems → Choose folder**. The app discovers that settings file and maps each listed filename to its instrument label, family, reference gain and seating. If the selected folder contains several `.orchmix.json` files, select the intended one with **Open session JSON**; the app does not guess. Ordinary `.json` files are not opened automatically.
+
+The map adapts to the instruments present: empty rows disappear, crowded rows split, and the mixer has one channel per loaded stem. Default rows are strings at the front, woodwinds in the middle, brass at the back and percussion/harp at the rear. Optional `seat` settings override the row, order and relative polygon width. See [the session format](SESSION-FORMAT.md) for a small editable example and a complete Beethoven template.
+
+**Save session settings** exports a JSON without audio. Place it alongside the stems to reopen the same setup by choosing the folder again. If the files sit in subfolders, keep those paths relative to the JSON’s containing folder. Choosing a folder grants local access for that selection only; the app does not scan your computer or remember permission after a browser reload.
 
 ## Optional local server
 
@@ -23,7 +31,7 @@ python3 scripts/serve.py
 
 On Windows, `py scripts/serve.py` is an alternative. The server opens `http://127.0.0.1:8765/` and listens on your own computer only. Use `--no-browser` to suppress automatic opening or `--port 8766` if the port is occupied. Stop it with Ctrl+C.
 
-Only the named application assets and two documentation files are served. Audio, local project JSON files, repository metadata and directory listings are not exposed. Choose audio through the browser's file picker even when using this server. There is no upload endpoint.
+Only the named application assets, documentation and the example settings template are served. Audio, your local project JSON files, repository metadata and directory listings are not exposed. Choose audio through the browser's file picker even when using this server. There is no upload endpoint.
 
 ## Download the Beethoven starter material
 
@@ -64,7 +72,7 @@ The helper:
 - Refuses existing outputs unless `--overwrite` is supplied. All conversions are checked before final files are installed. The source files are not changed.
 - Writes `session.orchmix.json` with file names, labels, families and initial 0 dB reference gains. It contains no audio. Unknown instrument names initially use the strings family; review them in setup.
 
-Select the prepared WAVs in the app and load the accompanying session JSON. The JSON's excerpt starts at **0**, because the original start time has already been trimmed. Do not apply the original start offset a second time. Session files refer to local filenames; they are not URLs and cannot retrieve recordings automatically.
+Choose the prepared folder in the app; its single `session.orchmix.json` opens automatically with the WAVs. The JSON's excerpt starts at **0**, because the original start time has already been trimmed. Do not apply the original start offset a second time. Session files refer to local filenames; they are not URLs and cannot retrieve recordings automatically.
 
 ## What stays local
 

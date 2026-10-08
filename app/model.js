@@ -22,6 +22,7 @@
   ].map(Object.freeze));
 
   const FAMILIES = Object.freeze(['strings', 'woodwinds', 'brass', 'percussion']);
+  const SEAT_ROWS = Object.freeze(['front', 'middle', 'back', 'rear']);
   const AUDIO_PATTERN = /\.(wav|mp3|flac|ogg|m4a|aif|aiff|opus|webm)$/i;
   const RESERVED_IDS = new Set(['constructor', 'prototype', '__proto__']);
 
@@ -139,6 +140,16 @@
     return value;
   }
 
+  function validateSeat(value, label) {
+    if (!value || typeof value !== 'object' || Array.isArray(value) || !SEAT_ROWS.includes(value.row)) {
+      throw new Error(label + ' must specify an orchestra row: front, middle, back or rear.');
+    }
+    const seat = { row: value.row };
+    if (value.order !== undefined) seat.order = finiteNumber(value.order, label + ' order', -1000, 1000);
+    if (value.weight !== undefined) seat.weight = finiteNumber(value.weight, label + ' weight', 0.25, 4);
+    return seat;
+  }
+
   function validateSession(json) {
     let session = json;
     if (typeof json === 'string') {
@@ -164,13 +175,15 @@
       if (ids.has(track.id)) throw new Error('Duplicate track ID: ' + track.id);
       ids.add(track.id);
       if (!FAMILIES.includes(track.family)) throw new Error(label + ' has an unsupported instrument family.');
-      return {
+      const result = {
         id: track.id,
         name: boundedText(track.name, label + ' name', 100),
         family: track.family,
         file: localPath(track.file, label + ' file'),
         referenceDb: finiteNumber(track.referenceDb === undefined ? 0 : track.referenceDb, label + ' reference level', -48, 12)
       };
+      if (track.seat !== undefined) result.seat = validateSeat(track.seat, label + ' seat');
+      return result;
     });
     return { version: 1, title, excerpt: { start, duration }, tracks };
   }
@@ -208,7 +221,8 @@
           name: track.name,
           family: track.family,
           file: typeof file === 'string' ? file : file && (file.webkitRelativePath || file.name),
-          referenceDb: track.referenceDb === undefined ? 0 : track.referenceDb
+          referenceDb: track.referenceDb === undefined ? 0 : track.referenceDb,
+          ...(track.seat === undefined ? {} : { seat: track.seat })
         };
       })
     });
@@ -257,5 +271,5 @@
     return Object.fromEntries(unique.map((id, index) => [id, values[index]]));
   }
 
-  return Object.freeze({ DEFAULT_TRACKS, FAMILIES, inferTrack, isAudioFile, findFiles, validateSession, makeSession, scoreBalance, randomizedOffsets });
+  return Object.freeze({ DEFAULT_TRACKS, FAMILIES, SEAT_ROWS, inferTrack, isAudioFile, findFiles, validateSession, makeSession, scoreBalance, randomizedOffsets });
 });

@@ -6,8 +6,8 @@
   const state = {
     tracks: [], loaded: false, demo: false, challenge: false, revealed: false,
     referenceListening: false, refs: {}, offsets: {}, controls: {}, muted: new Set(), solo: new Set(),
-    activeIds: [], title: '', excerpt: { start: 0, duration: 30 }, cards: new Map(),
-    files: [], pending: [], manifest: null, loading: false, loop: true
+    activeIds: [], title: '', excerpt: { start: 0, duration: 30 }, cards: new Map(), regions: new Map(), selectedId: null,
+    files: [], pending: [], manifest: null, manifestBase: '', explicitManifest: false, selectionToken: 0, loading: false, loop: true
   };
   const familyLabels = { strings: 'Strings', woodwinds: 'Woodwinds', brass: 'Brass', percussion: 'Percussion / harp' };
   const fmt = seconds => { const n = Math.max(0, Math.floor(seconds || 0)); return Math.floor(n / 60) + ':' + String(n % 60).padStart(2, '0'); };
@@ -24,6 +24,7 @@
       const silent = !state.referenceListening && (state.muted.has(t.id) || (state.solo.size && !state.solo.has(t.id)));
       engine.setGain(t.id, silent ? -100 : state.referenceListening ? state.refs[t.id] : currentGain(t));
       state.cards.get(t.id)?.element.classList.toggle('muted', Boolean(silent));
+      state.regions.get(t.id)?.classList.toggle('muted', Boolean(silent));
     }
   }
   function renderReadouts() {
@@ -54,39 +55,68 @@
     $('score').hidden = !result;
     if (result) $('score').textContent = result.count < 2 ? 'Not enough active parts' : result.score + '% · ' + result.meanAbsoluteError.toFixed(1) + ' dB mean error';
   }
-  function positionTracks(tracks) {
-    const result = new Map();
-    const rows = { strings: [74, 20, 80], woodwinds: [44, 21, 79], brass: [15, 27, 65], percussion: [13, 86, 86] };
-    for (const family of M.FAMILIES) {
-      const group = tracks.filter(t => t.family === family);
-      let [y, min, max] = rows[family];
-      if (group.length > 1 && family === 'percussion') { min = 70; max = 93; }
-      if (group.length > 3 && family === 'brass') { min = 15; max = 63; }
-      group.forEach((t, i) => {
-        const x = group.length === 1 ? (min + max) / 2 : min + (max - min) * i / (group.length - 1);
-        const arc = family === 'strings' ? 7 * (1 - Math.abs(i - (group.length - 1) / 2) / Math.max(1, (group.length - 1) / 2)) : 0;
-        result.set(t.id, { x, y: y + arc });
-      });
+  function svgNode(tag, attributes, text) {
+    const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (const [name, value] of Object.entries(attributes || {})) node.setAttribute(name, value);
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+  function selectTrack(id, focus) {
+    state.selectedId = id;
+    for (const [key, ui] of state.cards) ui.element.classList.toggle('selected', key === id);
+    for (const [key, region] of state.regions) region.classList.toggle('selected', key === id);
+    if (focus) {
+      const ui = state.cards.get(id);
+      ui?.element.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'auto' });
+      ui?.wheel.focus({ preventScroll: true });
     }
-    return result;
   }
   function renderStage() {
     const tracks = state.loaded ? state.tracks : M.DEFAULT_TRACKS;
-    const positions = positionTracks(tracks);
-    const many = tracks.length > 16 || M.FAMILIES.some(f => tracks.filter(t => t.family === f).length > (f === 'percussion' ? 2 : 6));
-    $('stage').classList.toggle('many', many);
+    const layout = window.OrchLayout.calculate(tracks);
+    const byId = new Map(tracks.map(t => [t.id, t]));
+    const sorted = layout.map(area => byId.get(area.id));
     $('instrument-cards').replaceChildren(); state.cards.clear();
-    const sorted = [...tracks].sort((a, b) => M.FAMILIES.indexOf(a.family) - M.FAMILIES.indexOf(b.family));
+    $('orchestra-regions').replaceChildren(); state.regions.clear();
+    $('mixer-count').textContent = tracks.length + (tracks.length === 1 ? ' channel' : ' channels');
+    $('instrument-cards').style.setProperty('--channels', tracks.length);
+    for (const [index, area] of layout.entries()) {
+      const t = byId.get(area.id);
+      const group = svgNode('g', { class: 'orchestra-region ' + t.family, 'data-track': t.id, role: 'button', tabindex: state.loaded ? 0 : -1, 'aria-label': t.name + ' — focus mixer fader', 'aria-disabled': String(!state.loaded) });
+      group.append(svgNode('title', {}, t.name + ' · ' + familyLabels[t.family]));
+      const points = area.points.map(p => p.map(n => n.toFixed(2)).join(',')).join(' ');
+      group.append(svgNode('polygon', { points, class: 'region-base' }), svgNode('polygon', { points, class: 'region-light' }));
+      const clipId = 'region-clip-' + index;
+      const clip = svgNode('clipPath', { id: clipId }); clip.append(svgNode('polygon', { points })); group.append(clip);
+      const labelWrap = svgNode('g', { 'clip-path': 'url(#' + clipId + ')' });
+      const label = svgNode('text', { x: area.label.x, y: area.label.y, 'data-x': area.label.x, 'data-y': area.label.y, class: 'region-label', 'aria-hidden': 'true' });
+      const name = t.name.length > 23 ? t.name.slice(0, 21) + '…' : t.name;
+      // Two lines keep labels legible in the narrower outer sections.
+      const words = name.split(' '); let lines = [name];
+      if (name.length > 12 && words.length > 1) {
+        let first = ''; while (words.length > 1 && first.length < name.length / 2 - 2) first += (first ? ' ' : '') + words.shift();
+        lines = [first, words.join(' ')];
+      }
+      for (const [i, line] of lines.entries()) label.append(svgNode('tspan', { x: area.label.x, dy: i === 0 ? (lines.length > 1 ? -4 : 2) : 15 }, line));
+      if (tracks.length > 24) { label.replaceChildren(svgNode('tspan', { x: area.label.x, dy: 4 }, String(index + 1).padStart(2, '0'))); }
+      else label.append(svgNode('tspan', { x: area.label.x, dy: 17, class: 'region-number' }, String(index + 1).padStart(2, '0')));
+      labelWrap.append(label); group.append(labelWrap); group.classList.toggle('compact', tracks.length > 24);
+      const activate = () => { if (state.loaded) selectTrack(t.id, true); };
+      group.addEventListener('click', activate);
+      group.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); activate(); } });
+      $('orchestra-regions').append(group); state.regions.set(t.id, group);
+    }
     for (const t of sorted) {
       const el = document.createElement('div'); el.className = 'instrument ' + t.family; el.dataset.track = t.id;
-      const pos = positions.get(t.id); el.style.setProperty('--x', pos.x + '%'); el.style.setProperty('--y', pos.y + '%');
+      const channel = document.createElement('span'); channel.className = 'channel-number'; channel.textContent = String(sorted.indexOf(t) + 1).padStart(2, '0');
       const label = document.createElement('p'); label.className = 'instrument-label'; label.textContent = t.name; label.title = t.name;
       const controls = document.createElement('div'); controls.className = 'instrument-controls';
       const dynamics = document.createElement('div'); dynamics.className = 'dynamics'; dynamics.setAttribute('aria-hidden', 'true');
       for (const text of ['ff', 'mf', 'pp']) { const span = document.createElement('span'); span.textContent = text; dynamics.append(span); }
       const wrap = document.createElement('div'); wrap.className = 'wheel-wrap';
-      const wheel = document.createElement('input'); wheel.type = 'range'; wheel.className = 'wheel'; wheel.min = state.challenge ? '-18' : '-48'; wheel.max = state.challenge ? '18' : '12'; wheel.step = '.5'; wheel.value = state.controls[t.id] ?? 0; wheel.disabled = !state.loaded;
+      const wheel = document.createElement('input'); wheel.type = 'range'; wheel.className = 'wheel fader'; wheel.min = state.challenge ? '-18' : '-48'; wheel.max = state.challenge ? '18' : '12'; wheel.step = '.5'; wheel.value = state.controls[t.id] ?? 0; wheel.disabled = !state.loaded;
       wheel.setAttribute('aria-label', t.name + ' balance');
+      wheel.addEventListener('focus', () => selectTrack(t.id, false));
       wheel.addEventListener('input', () => { state.controls[t.id] = Number(wheel.value); if (state.loaded) { applyGains(); renderReadouts(); } });
       wheel.addEventListener('wheel', event => { if (wheel.disabled || event.ctrlKey) return; event.preventDefault(); wheel.value = clamp(Number(wheel.value) + (event.deltaY < 0 ? .5 : -.5), Number(wheel.min), Number(wheel.max)); wheel.dispatchEvent(new Event('input')); }, { passive: false });
       wrap.append(wheel);
@@ -100,9 +130,18 @@
       buttons.append(solo, mute); controls.append(dynamics, wrap, buttons);
       const value = document.createElement('p'); value.className = 'instrument-value';
       const bar = document.createElement('div'); bar.className = 'energy-bar'; bar.setAttribute('aria-hidden', 'true'); bar.append(document.createElement('i'));
-      el.append(label, controls, value, bar); $('instrument-cards').append(el); state.cards.set(t.id, { element: el, wheel, value, solo, mute });
+      el.append(channel, label, controls, value, bar); $('instrument-cards').append(el); state.cards.set(t.id, { element: el, wheel, value, solo, mute });
     }
-    renderReadouts();
+    $('stage-hint').textContent = tracks.length > 24 ? 'Numbered areas match the faders below · select an area to find its part.' : 'Light follows each part’s audible energy · select an area to find its fader.';
+    sizeMapLabels(); selectTrack(state.selectedId, false); renderReadouts();
+  }
+  function sizeMapLabels() {
+    const map = $('orchestra-map');
+    const scaleX = map.clientWidth ? (map.clientHeight / 540) / (map.clientWidth / 1000) : 1;
+    for (const label of map.querySelectorAll('.region-label')) {
+      const x = Number(label.dataset.x), y = Number(label.dataset.y);
+      label.setAttribute('transform', 'translate(' + x + ' ' + y + ') scale(' + scaleX + ' 1) translate(' + -x + ' ' + -y + ')');
+    }
   }
   function refreshMode() {
     document.body.classList.toggle('loaded', state.loaded);
@@ -119,7 +158,7 @@
     $('reference-button').textContent = state.referenceListening ? 'Back to your mix' : 'Listen to reference';
     $('reference-button').style.color = state.referenceListening ? 'var(--cream)' : '';
     $('mode-label').textContent = state.challenge ? 'BALANCE CHALLENGE' : 'EXPLORATION';
-    $('exercise-instruction').textContent = state.challenge ? 'Recover the reference by ear. The wheels start with hidden offsets.' : 'Turn a wheel. Follow a voice. Hear the whole.';
+    $('exercise-instruction').textContent = state.challenge ? 'Recover the reference by ear. The faders start with hidden offsets.' : 'Follow a voice. Shape the balance. Hear the whole.';
     for (const id of ['play-button', 'restart-button', 'seek', 'reference-button', 'reset-button']) $(id).disabled = !state.loaded;
     $('save-button').disabled = !state.loaded || state.demo;
     $('reset-button').textContent = state.challenge ? 'Show reference solution' : 'Reset to reference';
@@ -184,20 +223,82 @@
       const family = document.createElement('select'); family.setAttribute('aria-label', 'Family for ' + track.file.name);
       for (const id of M.FAMILIES) { const opt = document.createElement('option'); opt.value = id; opt.textContent = familyLabels[id]; family.append(opt); } family.value = track.family; family.addEventListener('change', () => { track.family = family.value; });
       const reference = document.createElement('input'); reference.type = 'number'; reference.min = '-48'; reference.max = '12'; reference.step = '.5'; reference.value = track.referenceDb; reference.setAttribute('aria-label', 'Reference dB for ' + track.file.name); reference.title = 'Reference gain in dB; leave at 0 to preserve the source balance'; reference.addEventListener('input', () => { track.referenceDb = Number(reference.value); });
-      row.append(include, filename, name, family, reference); $('file-list').append(row);
+      const seat = document.createElement('select'); seat.setAttribute('aria-label', 'Stage row for ' + track.file.name);
+      for (const [id, label] of [['', 'Auto seating'], ['front', 'Front'], ['middle', 'Middle'], ['back', 'Back'], ['rear', 'Rear']]) { const opt = document.createElement('option'); opt.value = id; opt.textContent = label; seat.append(opt); }
+      seat.value = track.seat?.row || ''; seat.addEventListener('change', () => { if (seat.value) track.seat = { ...track.seat, row: seat.value }; else delete track.seat; });
+      row.append(include, filename, name, family, seat, reference); $('file-list').append(row);
     }
     $('load-button').disabled = state.loading || !state.pending.some(t => t.selected);
   }
-  function chooseFiles(fileList) {
-    state.files = Array.from(fileList).filter(file => M.isAudioFile(file));
+  function directoryOf(file) {
+    const path = file.webkitRelativePath || '';
+    return path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
+  }
+  function commonDirectory(files) {
+    if (!files.length || files.some(file => !file.webkitRelativePath)) return '';
+    const parts = files.map(file => directoryOf(file).split('/'));
+    return parts[0].filter((part, i) => parts.every(path => path.slice(0, i + 1).join('/') === parts[0].slice(0, i + 1).join('/'))).join('/');
+  }
+  async function readManifest(file) {
+    if (file.size > 1024 * 1024) throw new Error('Session JSON must be smaller than 1 MB. Audio is loaded separately.');
+    return M.validateSession(await file.text());
+  }
+  function showManifest() {
+    $('session-title').value = state.manifest.title;
+    $('excerpt-start').value = state.manifest.excerpt.start;
+    $('excerpt-duration').value = state.manifest.excerpt.duration;
+  }
+  function resolveManifest() {
+    const scoped = base => M.findFiles(state.manifest.tracks.map(t => ({ ...t, file: base ? base + '/' + t.file : t.file })), state.files);
+    if (state.manifestBase) {
+      const found = scoped(state.manifestBase);
+      if (!found.missing.length && !found.ambiguous.length) return found;
+      // Older exports included the picker root in every path. Support those
+      // only within the selected JSON's folder, then export portable paths.
+      const localFiles = state.files.filter(file => file.webkitRelativePath?.startsWith(state.manifestBase + '/'));
+      const legacy = M.findFiles(state.manifest.tracks, localFiles);
+      return !legacy.missing.length && !legacy.ambiguous.length ? legacy : found;
+    }
+    const direct = scoped('');
+    if (!direct.missing.length && !direct.ambiguous.length) return direct;
+    // Standalone JSON may refer to a subfolder. Require one complete matching
+    // directory when resolving subfolder paths. Ambiguous matches need a narrower selection.
+    const directories = new Set();
+    for (const file of state.files) {
+      const parts = directoryOf(file).split('/').filter(Boolean);
+      for (let i = 1; i <= parts.length; i++) directories.add(parts.slice(0, i).join('/'));
+    }
+    const matches = [...directories].map(base => ({ base, found: scoped(base) })).filter(({ found }) => !found.missing.length && !found.ambiguous.length);
+    if (matches.length === 1) { state.manifestBase = matches[0].base; return matches[0].found; }
+    if (matches.length > 1) throw new Error('This session matches more than one folder. Choose only the folder for the intended performance.');
+    return direct;
+  }
+  async function chooseFiles(fileList) {
+    const token = ++state.selectionToken;
+    const selected = Array.from(fileList);
+    state.files = selected.filter(file => M.isAudioFile(file));
+    state.pending = []; renderFileList();
+    const manifests = selected.filter(file => /\.orchmix\.json$/i.test(file.name));
+    state.manifestBase = '';
+    if (!state.explicitManifest) state.manifest = null;
+    try {
+      if (manifests.length > 1 && !state.explicitManifest) throw new Error('Multiple session JSON files found. Use Open session JSON to choose one, or choose a folder containing a single session.');
+      if (manifests.length === 1 && !state.explicitManifest) {
+        const manifest = await readManifest(manifests[0]);
+        if (token !== state.selectionToken) return;
+        state.manifest = manifest; state.manifestBase = directoryOf(manifests[0]); showManifest();
+      }
+    } catch (error) { if (token === state.selectionToken) { state.manifest = null; $('load-message').textContent = error.message; } return; }
+
     if (!state.files.length) { state.pending = []; renderFileList(); $('load-message').textContent = 'No supported audio found. Extract ZIP / TAR archives before selecting the audio.'; return; }
     if (state.manifest) {
-      const found = M.findFiles(state.manifest.tracks, state.files);
+      let found;
+      try { found = resolveManifest(); } catch (error) { $('load-message').textContent = error.message; return; }
       if (found.missing.length || found.ambiguous.length) {
         state.pending = [];
         $('load-message').textContent = [found.missing.length ? 'Missing: ' + found.missing.map(t => t.file).join(', ') : '', found.ambiguous.length ? 'Ambiguous filenames: ' + found.ambiguous.map(t => t.file).join(', ') : '', 'Choose the original folder for saved relative paths.'].filter(Boolean).join('\n'); renderFileList(); return;
       }
-      state.pending = found.matches.map(t => ({ ...t, selected: true })); $('load-message').textContent = 'Session matched. Reference levels have been restored.';
+      state.pending = found.matches.map(t => ({ ...t, selected: true })); $('load-message').textContent = 'Session matched. Instrumentation, seating and reference levels have been restored.';
     } else {
       if (state.files.length > 120) { state.pending = []; renderFileList(); $('load-message').textContent = 'This folder contains many recordings. Choose one piece and one microphone folder, or select the individual stems.'; return; }
       state.pending = state.files.map((file, i) => ({ ...M.inferTrack(file.name, i), file, referenceDb: 0, selected: !/(?:^|[_\s-])(mix(?:ture)?|tutti|reference|master|full|scales?|solos?)(?:[_\s.-]|$)/i.test(file.name) }));
@@ -206,17 +307,24 @@
       if (!$('session-title').value) $('session-title').value = state.files[0].webkitRelativePath?.split('/')[0] || 'My orchestra';
       $('load-message').textContent = duplicates.length ? 'Repeated filenames found. Choose ONE microphone folder (for example Tree or StereoMix), or select only the intended tracks below.' : 'Check the instruments and exclude any full mix. Reference dB defaults to the original stem level.';
     }
+    const base = state.manifestBase || commonDirectory(state.pending.map(t => t.file));
+    for (const track of state.pending) {
+      const path = track.file.webkitRelativePath || track.file.name;
+      track.sessionFile = base && path.startsWith(base + '/') ? path.slice(base.length + 1) : path;
+    }
     renderFileList();
   }
   async function openSession(file) {
     if (!file) return;
+    const token = ++state.selectionToken;
+    state.pending = []; renderFileList();
     try {
-      if (file.size > 1024 * 1024) throw new Error('Session JSON must be smaller than 1 MB. Audio is loaded separately.');
-      state.manifest = M.validateSession(await file.text());
-      $('session-title').value = state.manifest.title; $('excerpt-start').value = state.manifest.excerpt.start; $('excerpt-duration').value = state.manifest.excerpt.duration;
-      state.pending = []; $('load-message').textContent = 'Settings loaded. Choose the matching audio files or the original folder.';
-      if (state.files.length) chooseFiles(state.files); else renderFileList();
-    } catch (error) { $('load-message').textContent = error.message; }
+      const manifest = await readManifest(file);
+      if (token !== state.selectionToken) return;
+      state.manifest = manifest; state.manifestBase = directoryOf(file); state.explicitManifest = true;
+      showManifest(); $('load-message').textContent = 'Settings loaded. Choose the matching audio files or the original folder.';
+      if (state.files.length) await chooseFiles(state.files); else renderFileList();
+    } catch (error) { if (token === state.selectionToken) { state.manifest = null; state.manifestBase = ''; state.explicitManifest = false; $('load-message').textContent = error.message; } }
   }
   async function loadExcerpt() {
     if (state.loading) return;
@@ -238,7 +346,7 @@
   function saveSession() {
     if (!state.loaded || state.demo) return;
     try {
-      const settings = M.makeSession(state.title, state.tracks.map(t => ({ ...t, referenceDb: state.refs[t.id] })), state.excerpt);
+      const settings = M.makeSession(state.title, state.tracks.map(t => ({ ...t, file: t.sessionFile || t.file, referenceDb: state.refs[t.id] })), state.excerpt);
       const url = URL.createObjectURL(new Blob([JSON.stringify(settings, null, 2) + '\n'], { type: 'application/json' }));
       const a = document.createElement('a'); a.href = url; a.download = state.title.replace(/[^a-z0-9_-]/gi, '-').slice(0, 80) + '.orchmix.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 2000);
       status('Session settings saved. Keep the audio files; you will select them again when reopening.');
@@ -246,7 +354,7 @@
   }
   function openLibrary() {
     if (state.loading) return;
-    engine.pause(); updateTransport(); state.manifest = null; state.pending = []; state.files = [];
+    engine.pause(); updateTransport(); state.manifest = null; state.manifestBase = ''; state.explicitManifest = false; state.selectionToken++; state.pending = []; state.files = [];
     $('session-title').value = ''; $('load-message').textContent = ''; $('audio-files').value = ''; $('audio-folder').value = ''; $('session-file').value = ''; renderFileList(); openDialog('library-dialog');
   }
   $('library-button').addEventListener('click', openLibrary); $('welcome-load').addEventListener('click', openLibrary);
@@ -284,12 +392,14 @@
       lastFrame = now;
       if (state.loaded) {
         const levels = engine.levels();
-        for (const [id, ui] of state.cards) { const value = engine.isPlaying ? Math.min(1, Math.sqrt(levels[id] || 0) * 2.5) : 0; ui.element.style.setProperty('--energy', value.toFixed(3)); }
+        for (const [id, ui] of state.cards) { const value = engine.isPlaying ? Math.min(1, Math.sqrt(levels[id] || 0) * 2.5) : 0; const energy = value.toFixed(3); ui.element.style.setProperty('--energy', energy); state.regions.get(id)?.style.setProperty('--energy', energy); }
         if (document.activeElement !== $('seek')) $('seek').value = engine.currentTime;
         $('time-current').textContent = fmt(engine.currentTime); updateTransport();
       }
     }
     requestAnimationFrame(animate);
   }
-  renderStage(); refreshMode(); requestAnimationFrame(animate);
+  renderStage(); refreshMode();
+  new ResizeObserver(sizeMapLabels).observe($('orchestra-map'));
+  requestAnimationFrame(animate);
 })();

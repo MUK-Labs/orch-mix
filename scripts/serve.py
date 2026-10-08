@@ -13,9 +13,12 @@ ASSETS = {
     "app/style.css": "text/css; charset=utf-8",
     "app/app.js": "text/javascript; charset=utf-8",
     "app/model.js": "text/javascript; charset=utf-8",
+    "app/layout.js": "text/javascript; charset=utf-8",
     "app/audio-engine.js": "text/javascript; charset=utf-8",
     "docs/LOCAL-USE.md": "text/plain; charset=utf-8",
     "docs/AUDIO-SOURCES.md": "text/plain; charset=utf-8",
+    "docs/SESSION-FORMAT.md": "text/plain; charset=utf-8",
+    "examples/beethoven-layout.json": "application/json; charset=utf-8",
 }
 
 
