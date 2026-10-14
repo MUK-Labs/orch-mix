@@ -16,7 +16,10 @@
         "row": "front",
         "order": 1,
         "weight": 4
-      }
+      },
+      "instrument": "violin",
+      "players": 4,
+      "playersBasis": "confirmed"
     },
     {
       "id": "vln2",
@@ -28,7 +31,10 @@
         "row": "front",
         "order": 2,
         "weight": 4
-      }
+      },
+      "instrument": "violin",
+      "players": 4,
+      "playersBasis": "confirmed"
     },
     {
       "id": "vla",
@@ -40,7 +46,10 @@
         "row": "front",
         "order": 3,
         "weight": 2
-      }
+      },
+      "instrument": "viola",
+      "players": 2,
+      "playersBasis": "confirmed"
     },
     {
       "id": "vc",
@@ -52,7 +61,10 @@
         "row": "front",
         "order": 4,
         "weight": 2
-      }
+      },
+      "instrument": "cello",
+      "players": 2,
+      "playersBasis": "confirmed"
     },
     {
       "id": "cb",
@@ -64,7 +76,10 @@
         "row": "front",
         "order": 5,
         "weight": 1
-      }
+      },
+      "instrument": "bass",
+      "players": 1,
+      "playersBasis": "confirmed"
     },
     {
       "id": "fl",
@@ -76,7 +91,10 @@
         "row": "middle",
         "order": 1,
         "weight": 1
-      }
+      },
+      "instrument": "flute",
+      "players": 1,
+      "playersBasis": "confirmed"
     },
     {
       "id": "ob",
@@ -88,7 +106,10 @@
         "row": "middle",
         "order": 2,
         "weight": 2
-      }
+      },
+      "instrument": "oboe",
+      "players": 2,
+      "playersBasis": "confirmed"
     },
     {
       "id": "cl",
@@ -100,7 +121,10 @@
         "row": "middle",
         "order": 3,
         "weight": 2
-      }
+      },
+      "instrument": "clarinet",
+      "players": 2,
+      "playersBasis": "confirmed"
     },
     {
       "id": "bn",
@@ -112,7 +136,10 @@
         "row": "middle",
         "order": 4,
         "weight": 2
-      }
+      },
+      "instrument": "bassoon",
+      "players": 2,
+      "playersBasis": "confirmed"
     },
     {
       "id": "hn",
@@ -124,7 +151,10 @@
         "row": "back",
         "order": 1,
         "weight": 2
-      }
+      },
+      "instrument": "horn",
+      "players": 2,
+      "playersBasis": "confirmed"
     },
     {
       "id": "trp",
@@ -136,7 +166,10 @@
         "row": "back",
         "order": 2,
         "weight": 2
-      }
+      },
+      "instrument": "trumpet",
+      "players": 2,
+      "playersBasis": "confirmed"
     },
     {
       "id": "timp",
@@ -148,7 +181,10 @@
         "row": "rear",
         "order": 1,
         "weight": 1
-      }
+      },
+      "instrument": "timpani",
+      "players": 1,
+      "playersBasis": "confirmed"
     }
   ]
 }

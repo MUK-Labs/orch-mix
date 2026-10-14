@@ -56,8 +56,14 @@ async function saveSettings(page, filename) {
     await page.locator('#demo-button').click();
     await page.waitForFunction(() => document.body.classList.contains('loaded'));
     await checkOrchestra(page, 12);
-    await page.locator('.orchestra-region[data-track="fl"]').click();
-    assert.equal(await page.locator('.instrument[data-track="fl"] .wheel').evaluate(el => document.activeElement === el), true);
+    const fluteArea = page.locator('.orchestra-region[data-track="fl"]');
+    const fluteLevel = await page.locator('.instrument[data-track="fl"] .wheel').inputValue();
+    await fluteArea.click();
+    assert.equal(await page.getByRole('button', { name: 'Mute Flutes', exact: true }).getAttribute('aria-pressed'), 'true');
+    assert.equal(await page.locator('.instrument[data-track="fl"] .wheel').inputValue(), fluteLevel);
+    await fluteArea.press('Enter');
+    assert.equal(await page.getByRole('button', { name: 'Mute Flutes', exact: true }).getAttribute('aria-pressed'), 'false');
+    assert.equal(await page.locator('.instrument[data-track="fl"] .wheel').inputValue(), fluteLevel);
     await page.locator('#play-button').click();
     await page.waitForFunction(() => [...document.querySelectorAll('.instrument')].some(e => Number(e.style.getPropertyValue('--energy')) > .01));
     await page.waitForFunction(() => Number(document.querySelector('.orchestra-region[data-track="vln1"]').style.getPropertyValue('--energy')) > .01);
@@ -221,7 +227,7 @@ async function saveSettings(page, filename) {
     await page.goto('http://127.0.0.1:18765/'); await page.locator('#demo-button').click();
     await page.waitForFunction(() => document.body.classList.contains('loaded'));
     await checkOrchestra(page, 12); assert.deepEqual(errors, []); assert.deepEqual(remote, []);
-    console.log('PASS: file:// and localhost; responsive orchestra polygons and separate mixer; region focus, energy and mute fade; hidden challenge/reveal/solution; local PCM16/24 excerpts; silent-part exclusion; explicit and folder-manifest settings/seat round-trips; relative nested paths; explicit folder replacement; legacy path migration; multiple/invalid manifest blockers; 48-part layout; playback end; error recovery; mobile width; no external requests; server audio exclusion.');
+    console.log('PASS: file:// and localhost; responsive orchestra polygons and separate mixer; pointer/keyboard polygon mute preserves fader levels; energy and mute fade; hidden challenge/reveal/solution; local PCM16/24 excerpts; silent-part exclusion; explicit and folder-manifest settings/seat round-trips; relative nested paths; explicit folder replacement; legacy path migration; multiple/invalid manifest blockers; 48-part layout; playback end; error recovery; mobile width; no external requests; server audio exclusion.');
     console.log('Screenshots and generated fixtures: ' + temp);
   } finally { if (server) server.kill(); await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

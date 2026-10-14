@@ -154,7 +154,77 @@
     });
   }
 
+  async function inspectSources(entries, options = {}) {
+    if (!Array.isArray(entries) || !entries.length) throw new Error('Select at least one audio stem.');
+    const ids = new Set();
+    const plans = [];
+    const assertCurrent = options.assertCurrent || (() => {});
+    for (let index = 0; index < entries.length; index++) {
+      const { id, file } = entries[index] || {};
+      if (typeof id !== 'string' || !id || ids.has(id)) throw new Error('Every stem needs a unique track ID.');
+      ids.add(id);
+      if (!file || typeof file.slice !== 'function' || !file.size) throw new Error(`No readable audio file for “${id}”.`);
+      if (options.onProgress) options.onProgress({ phase: 'inspect', index, total: entries.length,
+        fraction: index / (2 * entries.length), id, name: file.name });
+      const signature = file.size >= 12 ? await readBytes(file, 0, 12) : null;
+      assertCurrent();
+      const isWav = /\.wav$/i.test(file.name || '') || (signature &&
+        ['RIFF', 'RIFX', 'RF64', 'BW64'].includes(fourCC(signature, 0)));
+      const info = isWav ? await parseWav(file) : null;
+      let sourceDuration;
+      if (info) sourceDuration = info.duration;
+      else {
+        if (file.size > MAX_COMPRESSED_BYTES) throw new Error(`“${file.name}” is too large for safe compressed decoding. Convert it to PCM WAV; WAV excerpts are read without loading the whole recording.`);
+        sourceDuration = await compressedDuration(file);
+        if (sourceDuration > MAX_EXCERPT_SECONDS) throw new Error(`“${file.name}” is longer than 120 seconds. Compressed audio requires decoding the whole file; convert it to PCM WAV to load only your selected excerpt.`);
+      }
+      assertCurrent();
+      plans.push({ id, file, info, sourceDuration });
+    }
+    return plans;
+  }
+
+  // Account for already-held decoded stems, the next decode and its temporary
+  // input bytes. One-frame allowances cover rounding up at arbitrary offsets.
+  function safeExcerptDuration(plans, compressedSampleRate) {
+    let duration = Math.min(MAX_EXCERPT_SECONDS, ...plans.map(plan => plan.sourceDuration));
+    let heldRate = 0;
+    let heldAllowance = 0;
+    for (const plan of plans) {
+      const channels = plan.info ? plan.info.channels : MAX_CHANNELS;
+      const sampleRate = plan.info ? plan.info.sampleRate : compressedSampleRate;
+      const decodedRate = channels * sampleRate * 4;
+      const decodedAllowance = channels * 4;
+      let temporaryRate = 0;
+      let temporaryBytes;
+      if (plan.info) {
+        temporaryRate = sampleRate * plan.info.blockAlign;
+        temporaryBytes = plan.info.blockAlign;
+      } else {
+        temporaryBytes = Math.ceil((plan.sourceDuration + 1) * sampleRate) * MAX_CHANNELS * 4 + plan.file.size;
+      }
+      const available = MEMORY_BUDGET - heldAllowance - decodedAllowance - temporaryBytes;
+      duration = Math.min(duration, Math.max(0, available / (heldRate + decodedRate + temporaryRate)));
+      heldRate += decodedRate;
+      heldAllowance += decodedAllowance;
+    }
+    return Math.floor(duration * 1000) / 1000;
+  }
+
   function dbToGain(db) { return Math.pow(10, db / 20); }
+  function updateGain(param, value, now, playing) {
+    param.cancelScheduledValues(now);
+    if (!playing) {
+      // A muted mystery excerpt must be silent from its very first sample;
+      // approaching zero exponentially before playback can still leak audio.
+      param.setValueAtTime(value, now);
+    } else {
+      param.setTargetAtTime(value, now, 0.015);
+      // Exponential smoothing never reaches zero on its own. End the fade
+      // after eight time constants; later changes cancel this endpoint above.
+      if (value === 0) param.setValueAtTime(0, now + 0.12);
+    }
+  }
   function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
   function finite(value, fallback) { return Number.isFinite(Number(value)) ? Number(value) : fallback; }
   function trackMetadata(id, buffer, duration) {
@@ -206,6 +276,33 @@
       return this._loop && this._duration ? time % this._duration : Math.min(time, this._duration);
     }
 
+    /** Call directly from a user gesture before asynchronous folder/audio work. */
+    async unlock() {
+      await this._ensureContext().resume();
+    }
+
+    /** Read source durations without replacing the loaded excerpt or reading WAV samples. */
+    async inspect(entries, options = {}) {
+      const plans = await inspectSources(entries, options);
+      const needsCompressedContext = plans.some(plan => !plan.info);
+      const sampleRate = needsCompressedContext ? this._ensureContext().sampleRate : 0;
+      const maxExcerptDuration = safeExcerptDuration(plans, sampleRate);
+      if (maxExcerptDuration < 0.1) {
+        throw new Error('These stems exceed the 512 MiB audio-memory budget even for a short excerpt. Convert compressed files to PCM WAV, or use fewer tracks or a lower sample rate.');
+      }
+      const durations = plans.map(plan => plan.sourceDuration);
+      const warnings = [];
+      if (Math.max(...durations) - Math.min(...durations) > 0.05) {
+        warnings.push('Stem lengths differ. Random excerpts use the shortest stem; check that all files share a common timeline.');
+      }
+      return {
+        duration: Math.min(...durations), maxExcerptDuration, warnings,
+        tracks: plans.map(plan => ({ id: plan.id, duration: plan.sourceDuration,
+          channels: plan.info ? plan.info.channels : null,
+          sampleRate: plan.info ? plan.info.sampleRate : null }))
+      };
+    }
+
     _stopSources() {
       clearTimeout(this._endTimer);
       this._endTimer = null;
@@ -254,32 +351,11 @@
       if (finite(options.durationSeconds, 30) > MAX_EXCERPT_SECONDS) warnings.push('Excerpt length was limited to 120 seconds.');
       try {
         const context = this._ensureContext();
-        if (!Array.isArray(entries) || !entries.length) throw new Error('Select at least one audio stem.');
-        const ids = new Set();
-        const plans = [];
+        const plans = await inspectSources(entries, { onProgress: options.onProgress, assertCurrent });
         let shortest = Infinity;
-        for (let index = 0; index < entries.length; index++) {
-          const { id, file } = entries[index];
-          if (typeof id !== 'string' || !id || ids.has(id)) throw new Error('Every stem needs a unique track ID.');
-          ids.add(id);
-          if (!file || typeof file.slice !== 'function' || !file.size) throw new Error(`No readable audio file for “${id}”.`);
-          if (options.onProgress) options.onProgress({ phase: 'inspect', index, total: entries.length, fraction: index / (2 * entries.length), id, name: file.name });
-          const signature = file.size >= 12 ? await readBytes(file, 0, 12) : null;
-          assertCurrent();
-          const isWav = /\.wav$/i.test(file.name || '') || (signature &&
-            ['RIFF', 'RIFX', 'RF64', 'BW64'].includes(fourCC(signature, 0)));
-          const info = isWav ? await parseWav(file) : null;
-          let sourceDuration;
-          if (isWav) sourceDuration = info.duration;
-          else {
-            if (file.size > MAX_COMPRESSED_BYTES) throw new Error(`“${file.name}” is too large for safe compressed decoding. Convert it to PCM WAV; WAV excerpts are read without loading the whole recording.`);
-            sourceDuration = await compressedDuration(file);
-            if (sourceDuration > 120) throw new Error(`“${file.name}” is longer than 120 seconds. Compressed audio requires decoding the whole file; convert it to PCM WAV to load only your selected excerpt.`);
-          }
-          assertCurrent();
+        for (const { sourceDuration, file } of plans) {
           if (sourceDuration <= start) throw new Error(`The excerpt starts after the end of “${file.name}”.`);
           shortest = Math.min(shortest, sourceDuration - start);
-          plans.push({ id, file, info, sourceDuration });
         }
         const duration = Math.min(requested, shortest);
         if (duration < requested - 0.01) warnings.push(`The common excerpt was shortened to ${duration.toFixed(2)} seconds to fit the shortest stem.`);
@@ -454,12 +530,14 @@
       if (!track) return;
       const value = finite(db, 0);
       track.db = value <= -100 ? -100 : clamp(value, -60, 18);
-      track.gain.gain.setTargetAtTime(track.db === -100 ? 0 : dbToGain(track.db), this._context.currentTime, 0.015);
+      updateGain(track.gain.gain, track.db === -100 ? 0 : dbToGain(track.db),
+        this._context.currentTime, this._playing);
     }
 
     setMaster(db) {
       this._masterDb = clamp(finite(db, -12), -60, 6);
-      if (this._master) this._master.gain.setTargetAtTime(dbToGain(this._masterDb), this._context.currentTime, 0.015);
+      if (this._master) updateGain(this._master.gain, dbToGain(this._masterDb),
+        this._context.currentTime, this._playing);
     }
 
     setLoop(enabled) {

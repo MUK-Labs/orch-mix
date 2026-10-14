@@ -169,3 +169,38 @@ test('randomized offsets remain bounded and avoid a trivial shared offset', () =
   }
   assert.deepEqual(model.randomizedOffsets([]), {});
 });
+
+test('player counts and instrument types survive file matching and session export', () => {
+  const value = session();
+  Object.assign(value.tracks[0], { instrument: 'flute', players: 2, playersBasis: 'confirmed' });
+  const matched = model.findFiles(model.validateSession(value).tracks, [{ name: 'flute.wav' }]);
+  assert.deepEqual(model.makeSession(value.title, matched.matches, value.excerpt), value);
+  delete value.tracks[0].playersBasis;
+  assert.equal(model.validateSession(value).tracks[0].playersBasis, 'estimate');
+  delete value.tracks[0].players;
+  assert.equal('players' in model.validateSession(value).tracks[0], false);
+  // A display weight is never interpreted as a headcount.
+  value.tracks[0].seat = { row: 'middle', weight: 1.5 };
+  assert.equal('players' in model.validateSession(value).tracks[0], false);
+});
+
+test('counts reject fractional or invented confidence values and unsafe symbols', () => {
+  for (const players of [0, -1, 1.5, 81, Infinity, NaN, '2', null]) {
+    const value = session(); value.tracks[0].players = players;
+    assert.throws(() => model.validateSession(value), /whole number/);
+  }
+  for (const playersBasis of ['documented', 'unknown', '', null]) {
+    const value = session(); Object.assign(value.tracks[0], { players: 1, playersBasis });
+    assert.throws(() => model.validateSession(value), /playersBasis/);
+  }
+  const orphan = session(); orphan.tracks[0].playersBasis = 'confirmed';
+  assert.throws(() => model.validateSession(orphan), /player count/);
+  for (const instrument of ['url(javascript:alert(1))', '<svg>', 'constructor', null]) {
+    const value = session(); value.tracks[0].instrument = instrument;
+    assert.throws(() => model.validateSession(value), /instrument icon/);
+  }
+  for (const instrument of model.INSTRUMENT_TYPES) {
+    const value = session(); value.tracks[0].instrument = instrument;
+    assert.equal(model.validateSession(value).tracks[0].instrument, instrument);
+  }
+});

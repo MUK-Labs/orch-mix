@@ -23,6 +23,8 @@
 
   const FAMILIES = Object.freeze(['strings', 'woodwinds', 'brass', 'percussion']);
   const SEAT_ROWS = Object.freeze(['front', 'middle', 'back', 'rear']);
+  const INSTRUMENT_TYPES = Object.freeze(['violin', 'viola', 'cello', 'bass', 'flute', 'oboe', 'clarinet', 'bassoon', 'horn', 'trumpet', 'trombone', 'tuba', 'harp', 'timpani', 'percussion']);
+  const PLAYERS_BASES = Object.freeze(['confirmed', 'estimate']);
   const AUDIO_PATTERN = /\.(wav|mp3|flac|ogg|m4a|aif|aiff|opus|webm)$/i;
   const RESERVED_IDS = new Set(['constructor', 'prototype', '__proto__']);
 
@@ -183,6 +185,20 @@
         referenceDb: finiteNumber(track.referenceDb === undefined ? 0 : track.referenceDb, label + ' reference level', -48, 12)
       };
       if (track.seat !== undefined) result.seat = validateSeat(track.seat, label + ' seat');
+      if (track.instrument !== undefined) {
+        if (!INSTRUMENT_TYPES.includes(track.instrument)) throw new Error(label + ' has an unsupported instrument icon.');
+        result.instrument = track.instrument;
+      }
+      if (track.players !== undefined) {
+        if (!Number.isInteger(track.players) || track.players < 1 || track.players > 80) {
+          throw new Error(label + ' players must be a whole number between 1 and 80. Omit the field when the count is unknown.');
+        }
+        result.players = track.players;
+        result.playersBasis = track.playersBasis === undefined ? 'estimate' : track.playersBasis;
+        if (!PLAYERS_BASES.includes(result.playersBasis)) throw new Error(label + ' playersBasis must be confirmed or estimate.');
+      } else if (track.playersBasis !== undefined) {
+        throw new Error(label + ' playersBasis needs a player count.');
+      }
       return result;
     });
     return { version: 1, title, excerpt: { start, duration }, tracks };
@@ -222,7 +238,10 @@
           family: track.family,
           file: typeof file === 'string' ? file : file && (file.webkitRelativePath || file.name),
           referenceDb: track.referenceDb === undefined ? 0 : track.referenceDb,
-          ...(track.seat === undefined ? {} : { seat: track.seat })
+          ...(track.seat === undefined ? {} : { seat: track.seat }),
+          ...(track.instrument === undefined ? {} : { instrument: track.instrument }),
+          ...(track.players === undefined ? {} : { players: track.players }),
+          ...(track.playersBasis === undefined ? {} : { playersBasis: track.playersBasis })
         };
       })
     });
@@ -271,5 +290,5 @@
     return Object.fromEntries(unique.map((id, index) => [id, values[index]]));
   }
 
-  return Object.freeze({ DEFAULT_TRACKS, FAMILIES, SEAT_ROWS, inferTrack, isAudioFile, findFiles, validateSession, makeSession, scoreBalance, randomizedOffsets });
+  return Object.freeze({ DEFAULT_TRACKS, FAMILIES, SEAT_ROWS, INSTRUMENT_TYPES, PLAYERS_BASES, inferTrack, isAudioFile, findFiles, validateSession, makeSession, scoreBalance, randomizedOffsets });
 });

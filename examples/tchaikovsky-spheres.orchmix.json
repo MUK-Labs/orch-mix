@@ -16,7 +16,8 @@
         "row": "front",
         "order": 11,
         "weight": 3
-      }
+      },
+      "instrument": "violin"
     },
     {
       "id": "vln1-2",
@@ -28,7 +29,8 @@
         "row": "front",
         "order": 12,
         "weight": 3
-      }
+      },
+      "instrument": "violin"
     },
     {
       "id": "vln2-1",
@@ -40,7 +42,8 @@
         "row": "front",
         "order": 21,
         "weight": 3
-      }
+      },
+      "instrument": "violin"
     },
     {
       "id": "vln2-2",
@@ -52,7 +55,8 @@
         "row": "front",
         "order": 22,
         "weight": 3
-      }
+      },
+      "instrument": "violin"
     },
     {
       "id": "vla-1",
@@ -64,7 +68,8 @@
         "row": "front",
         "order": 31,
         "weight": 2
-      }
+      },
+      "instrument": "viola"
     },
     {
       "id": "vla-2",
@@ -76,7 +81,8 @@
         "row": "front",
         "order": 32,
         "weight": 2
-      }
+      },
+      "instrument": "viola"
     },
     {
       "id": "vc-1",
@@ -88,7 +94,8 @@
         "row": "front",
         "order": 41,
         "weight": 1.5
-      }
+      },
+      "instrument": "cello"
     },
     {
       "id": "vc-2",
@@ -100,7 +107,8 @@
         "row": "front",
         "order": 42,
         "weight": 1.5
-      }
+      },
+      "instrument": "cello"
     },
     {
       "id": "cb",
@@ -112,7 +120,10 @@
         "row": "front",
         "order": 50,
         "weight": 2
-      }
+      },
+      "instrument": "bass",
+      "players": 2,
+      "playersBasis": "estimate"
     },
     {
       "id": "harp",
@@ -124,7 +135,10 @@
         "row": "middle",
         "order": 0,
         "weight": 1
-      }
+      },
+      "instrument": "harp",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "picc",
@@ -136,7 +150,10 @@
         "row": "middle",
         "order": 10,
         "weight": 1
-      }
+      },
+      "instrument": "flute",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "fl-1",
@@ -148,7 +165,10 @@
         "row": "middle",
         "order": 11,
         "weight": 1
-      }
+      },
+      "instrument": "flute",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "fl-2",
@@ -160,7 +180,10 @@
         "row": "middle",
         "order": 12,
         "weight": 1
-      }
+      },
+      "instrument": "flute",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "ob-1",
@@ -172,7 +195,10 @@
         "row": "middle",
         "order": 21,
         "weight": 1
-      }
+      },
+      "instrument": "oboe",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "ob-2",
@@ -184,7 +210,10 @@
         "row": "middle",
         "order": 22,
         "weight": 1
-      }
+      },
+      "instrument": "oboe",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "eh",
@@ -196,7 +225,10 @@
         "row": "middle",
         "order": 23,
         "weight": 1
-      }
+      },
+      "instrument": "oboe",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "cl-1",
@@ -208,7 +240,10 @@
         "row": "middle",
         "order": 31,
         "weight": 1
-      }
+      },
+      "instrument": "clarinet",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "cl-2",
@@ -220,7 +255,10 @@
         "row": "middle",
         "order": 32,
         "weight": 1
-      }
+      },
+      "instrument": "clarinet",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "bn-1",
@@ -232,7 +270,10 @@
         "row": "middle",
         "order": 41,
         "weight": 1
-      }
+      },
+      "instrument": "bassoon",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "bn-2",
@@ -244,7 +285,10 @@
         "row": "middle",
         "order": 42,
         "weight": 1
-      }
+      },
+      "instrument": "bassoon",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "hn-1",
@@ -256,7 +300,10 @@
         "row": "back",
         "order": 11,
         "weight": 1
-      }
+      },
+      "instrument": "horn",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "hn-2",
@@ -268,7 +315,10 @@
         "row": "back",
         "order": 12,
         "weight": 1
-      }
+      },
+      "instrument": "horn",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "hn-3",
@@ -280,7 +330,10 @@
         "row": "back",
         "order": 13,
         "weight": 1
-      }
+      },
+      "instrument": "horn",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "hn-4",
@@ -292,7 +345,10 @@
         "row": "back",
         "order": 14,
         "weight": 1
-      }
+      },
+      "instrument": "horn",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "trp-1",
@@ -304,7 +360,10 @@
         "row": "back",
         "order": 21,
         "weight": 1
-      }
+      },
+      "instrument": "trumpet",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "trp-2",
@@ -316,7 +375,10 @@
         "row": "back",
         "order": 22,
         "weight": 1
-      }
+      },
+      "instrument": "trumpet",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "tbn-1",
@@ -328,7 +390,10 @@
         "row": "back",
         "order": 31,
         "weight": 1
-      }
+      },
+      "instrument": "trombone",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "tbn-2",
@@ -340,7 +405,10 @@
         "row": "back",
         "order": 32,
         "weight": 1
-      }
+      },
+      "instrument": "trombone",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "tbn-3",
@@ -352,7 +420,10 @@
         "row": "back",
         "order": 33,
         "weight": 1
-      }
+      },
+      "instrument": "trombone",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "tuba",
@@ -364,7 +435,10 @@
         "row": "back",
         "order": 40,
         "weight": 1
-      }
+      },
+      "instrument": "tuba",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "timp",
@@ -376,7 +450,10 @@
         "row": "rear",
         "order": 10,
         "weight": 1
-      }
+      },
+      "instrument": "timpani",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "perc-1",
@@ -388,7 +465,8 @@
         "row": "rear",
         "order": 21,
         "weight": 1
-      }
+      },
+      "instrument": "percussion"
     },
     {
       "id": "perc-2",
@@ -400,7 +478,8 @@
         "row": "rear",
         "order": 22,
         "weight": 1
-      }
+      },
+      "instrument": "percussion"
     }
   ]
 }

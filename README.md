@@ -9,15 +9,23 @@ A local orchestral balance lab for Adrián Artacho’s instrumentation teaching.
 1. Select **Try the sound demo** to test the controls immediately. This is generated demonstration audio, not a recording of an orchestra.
 2. Select **Load stems** to open synchronized audio files or one folder containing a piece’s stems. A single `.orchmix.json` in that folder supplies the instrument labels, seating and reference levels automatically.
 3. Choose an excerpt start and length (30 seconds by default), review the instrument names and families, then **Open excerpt**.
-4. Press play. Adjust the faders with a drag, mouse wheel or arrow keys. **S** solos a part; **M** mutes it.
+4. Press play. Adjust the faders with a drag, mouse wheel or arrow keys. Click a polygon to turn its part off or on without moving its fader. **All off** mutes the whole orchestra; **S** solos a part and **M** mutes it in the mixer.
 
-Chrome or Edge is the simplest starting point. Current Firefox and Safari support Web Audio; compressed format support varies by browser. PCM WAV is the most predictable input. An optional Python localhost launcher is available if a browser’s local-file policy blocks direct opening:
+For the remembered piece library and MIDI controller, use **Chrome or Edge** and the same local address each time. The optional Python launcher provides one:
 
 ```sh
 python3 scripts/serve.py
 ```
 
-The server binds only to `127.0.0.1` and serves a fixed list of application assets. The browser still opens audio through its file picker; the server cannot browse or serve your recordings.
+Open `http://127.0.0.1:8765/`. The server binds only to your computer and serves a fixed list of application assets. The browser still opens audio locally; the server cannot browse or serve your recordings. Direct `index.html` opening remains available for ordinary playback. Other browsers may lack the folder-handle or MIDI APIs; PCM WAV is the most predictable audio input.
+
+## Remember pieces and guess an excerpt
+
+Use **Remember folder** once for each folder of synchronized stems, ideally with its `.orchmix.json`. Saved pieces appear in the dropdown; select one and use **Open**. The browser remembers a folder handle and its label, not an audio copy or an absolute filesystem path. It may ask you to grant access again. Use the same browser profile and local address to keep the same library.
+
+**Random excerpt** chooses a saved piece and a valid starting point, conceals its title, and begins with every part muted. Click the polygons to introduce instruments one by one, then use **Reveal piece** when the participants have a guess. It uses folders whose read permission is already granted; open a locked folder once to make it available. Keep one valid `.orchmix.json` in each remembered folder for this mode. For full-length recordings, use PCM WAV stems: their durations and excerpts can be read without decoding the complete piece. Short compressed files remain subject to the usual size and duration limits. The excerpt length defaults to 30 seconds and is editable; a short recording or the audio memory budget can shorten it.
+
+Removing a saved piece only removes its library entry. Clearing this site's browser data also clears the remembered library; your recordings remain in their folders. See [local library and MIDI setup](docs/LOCAL-USE.md#remember-your-piece-folders).
 
 ## A listening exercise
 
@@ -27,9 +35,13 @@ The server binds only to `127.0.0.1` and serves a fixed list of application asse
 
 The family colours are blue for strings, green for woodwinds, red for brass and orange for percussion/harp. Each instrument group has a polygon in the orchestra map and a matching mixer channel below. The polygons brighten from the dark stage background as their audio energy rises; the illumination and small level bars follow the signal after each part’s gain, mute and solo controls. The master control changes overall playback level; it does not change the balance score. Start with the default −12 dB master to leave mixing headroom.
 
-The seating map adapts to the loaded instrumentation. It removes empty rows and splits crowded rows, while the mixer adds one channel per stem. Default seating places strings at the front, woodwinds in the middle, brass behind them and percussion/harp at the rear. A session JSON can override each group’s row, left-to-right order and relative area. See [the session format](docs/SESSION-FORMAT.md) and the [twelve-part Beethoven example](examples/beethoven-layout.json).
+The seating map adapts to the loaded instrumentation. It removes empty rows and splits crowded rows, while the mixer adds one channel per stem. Default seating places strings at the front, woodwinds in the middle, brass behind them and percussion/harp at the rear. A session JSON can override each group’s row, left-to-right order and relative area, and supply an instrument symbol and player count. Confirmed and estimated counts are distinguished; an unspecified count is not inferred from polygon size. See [the session format](docs/SESSION-FORMAT.md) and the [twelve-part Beethoven example](examples/beethoven-layout.json).
 
 The *pp–ff* marks are an intuitive playback scale, not an acoustic simulation of playing dynamics. A recorded forte played quietly retains its forte timbre. A reference balance represents one interpretation, not a uniquely correct orchestration.
+
+## Use a MIDI controller
+
+Connect the Korg nanoKONTROL2, open **MIDI controller**, choose **Connect MIDI**, then select **Learn** on a mixer channel and move the physical fader you want to assign. Eight controller slots follow the selected channel bank, so the same eight hardware faders can reach a larger orchestra. Mappings are remembered in this browser. On reopening, the app reconnects automatically only when MIDI permission has already been granted; otherwise choose **Connect MIDI** again. MIDI changes fader levels and leaves mute choices intact. See [the MIDI instructions](docs/LOCAL-USE.md#control-the-faders-with-midi).
 
 ## Get recordings
 
@@ -78,7 +90,7 @@ Load the new `wav` folder in Orch Mix. If you already have a session JSON, copy 
 
 ## Save a session
 
-**Save session settings** downloads a small `.orchmix.json` containing the piece title, excerpt, instrument labels, local filenames, seating and reference gains. It contains no audio. Save it beside the stems, then choose that folder to reopen the setup. The app automatically opens a folder’s single `.orchmix.json`; if several are present, choose the intended one with **Open session JSON**. You can also open a session JSON and select its matching audio files separately.
+**Save session settings** downloads a small `.orchmix.json` containing the piece title, excerpt, instrument labels, local filenames, seating, optional player counts and reference gains. It contains no audio. Save it beside the stems, then choose that folder or its saved library entry to reopen the setup. The app automatically opens a folder’s single `.orchmix.json`; if several are present, choose the intended one with **Open session JSON**. You can also open a session JSON and select its matching audio files separately.
 
 Filenames are relative to the session file’s folder, making the setup portable when the folder is moved. [Session format and examples](docs/SESSION-FORMAT.md) explain how to assign each stem to an orchestra area.
 
@@ -90,6 +102,7 @@ Saved sessions preserve the reference setup. They do not save a learner’s tran
 - The app’s content security policy blocks network connections; explicit source-guide links open publisher websites separately.
 - Audio/video formats, downloaded archives, `local-audio/`, `local-projects/` and exported session files are ignored by Git.
 - An optional server serves only named app files, with no directory listing or upload endpoint.
+- Saved folder handles live in this browser's IndexedDB; MIDI mappings live in its local storage. These are separate from the portable session JSON and contain no recordings.
 - Keeping recordings outside Git matters even in a private repository. The app does not manage or bypass a provider’s licence or DRM.
 
 ## Development
@@ -100,6 +113,9 @@ Plain HTML/CSS/JavaScript, with no runtime dependencies:
 - `app/audio-engine.js`: synchronized playback, bounded WAV excerpt reader and meters.
 - `app/model.js`: instrument inference, session validation and balance scoring.
 - `app/layout.js`: adaptive polygon seating geometry.
+- `app/instruments.js`: instrument symbols and player-count display.
+- `app/library.js`: locally remembered, permission-controlled piece folders.
+- `app/midi.js`: MIDI input, fader learning and saved controller mappings.
 - `scripts/`: optional Python standard-library utilities; preparation also needs FFmpeg.
 
 Run the focused unit tests with Node.js:
@@ -108,7 +124,7 @@ Run the focused unit tests with Node.js:
 node --test tests/*.test.cjs
 ```
 
-Browser smoke tests use Playwright as an optional development dependency; see `tests/browser-smoke.cjs` for invocation. The tests generate their own small audio fixtures; no third-party recordings are committed.
+Browser tests use Playwright as an optional development dependency; see `tests/browser-smoke.cjs` for setup, then run it and `tests/features-browser.cjs`. The feature suite simulates folder handles and MIDI input; physical controller behavior still needs checking on the target computer. The tests generate their own small audio fixtures; no third-party recordings are committed.
 
 ## Credits
 

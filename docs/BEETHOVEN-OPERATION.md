@@ -25,8 +25,10 @@ The [official project page, “Die Beteiligten”](https://openmusic.academy/doc
 
 The bass instrument is credited as **Violone** and described in the downloads as “Bass-Viole”. The session uses that source-specific name rather than the generic double-bass label. Each file represents the named group; a paired wind or brass section remains one mixer channel.
 
-`seat.weight` equals the credited player count in this template. It controls relative polygon width within a row, never audio gain. The layout engine reserves minimum widths and allocates space between rows independently, so the map is not an exact area chart of headcounts. Colour conventions remain blue strings, green woodwinds, red brass and orange timpani.
+The template supplies each section's `players` count with `playersBasis: "confirmed"`, plus its instrument symbol. The stage therefore shows the credited musicians inside their section polygons. The violone uses the bass symbol while retaining its source-specific label.
 
-The existing [beethoven-layout.json](../examples/beethoven-layout.json) template has been updated to the same names and weights. Use only one `.orchmix.json` in your audio folder for automatic selection. Do not add the separately recorded tutti as an extra stem.
+`seat.weight` also equals the credited player count in this template, but it is a separate setting. It controls relative polygon width within a row, never audio gain. The layout engine reserves minimum widths and allocates space between rows independently, so the map is not an exact area chart of headcounts. Colour conventions remain blue strings, green woodwinds, red brass and orange timpani.
+
+The existing [beethoven-layout.json](../examples/beethoven-layout.json) template has the same names, weights and confirmed counts. Use only one `.orchmix.json` in your audio folder for automatic selection. Do not add the separately recorded tutti as an extra stem.
 
 For download links and recording credits, see [AUDIO-SOURCES.md](AUDIO-SOURCES.md#start-here-operation-beethoven). The session contains no audio.

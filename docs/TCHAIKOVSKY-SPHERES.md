@@ -41,6 +41,8 @@ The app's `seat.weight` controls relative polygon width; it is **not a player-co
 
 These values are a visual convention, not measured performers per recording. In particular, `1.5` means half the cello section's display allocation. The layout engine also reserves minimum widths and splits crowded rows, so polygon areas are not an exact headcount chart. Full string names say “line 1/2” without claiming a particular divisi allocation.
 
+Musician symbols use a separate `players` field. The template leaves it out for all numbered string lines and the two unidentified untuned-percussion stems; those polygons show an identifying symbol with **?**, not a guessed number of musicians. The bass stem has `players: 2`; individual wind, brass, harp and timpani stems have `players: 1`. All supplied counts use `playersBasis: "estimate"` and appear with **≈**, because the diagram and recorded parts do not establish a unique-player roster. Piccolo shares the flute symbol, and English horn the oboe symbol, without changing their labels.
+
 Harp uses orange and sits on the left of the middle row. Strings are blue, woodwinds green, brass red, and percussion orange. This is a readable teaching arrangement rather than an exact reconstruction of the rectangular studio plan. With 33 stems the current app displays channel numbers on the map; instrument names remain in the matching faders and tooltips.
 
 The source metadata records durations and instrument activity, not players per numbered string stem. Its two generic percussion names are retained until their identities can be established by listening or by the producers. No guessed bass-drum/cymbal assignment is embedded in the JSON.

@@ -29,6 +29,8 @@ The paper's general recording diagram (Figure 2) shows **6–6–4–3–2** str
 
 The five string weights preserve the diagram's 6:6:4:3:2 proportions, scaled by one half to fit the app's maximum weight of 4. `seat.weight` affects polygon width within a row; it is not a count of people and never changes audio gain. The layout reserves a minimum width for each region, so displayed areas are not exact seat-count ratios.
 
+The separate `players` fields use **6, 6, 4, 3 and 2** for the string groups and **1** for each wind or horn part, all with `playersBasis: "estimate"`. The stage marks these counts with **≈**. These symbols are a useful visualization of the diagram and instrumental parts, not a confirmed Mozart performer roster. The instrument symbols and counts are preserved when you export the session.
+
 ## Source files
 
 The [official StereoMix archive](https://zenodo.org/records/17347681) has a single `Mozart/StereoMix/` folder with these fourteen FLAC basenames. Use the WAV conversions from that one folder, retaining their common time origin. The recording contains all four movements; use the excerpt start control to reach later passages. Avoid mixing stems from different microphone folders or separately trimmed exports.

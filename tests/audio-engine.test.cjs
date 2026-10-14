@@ -5,7 +5,14 @@ require('../app/audio-engine.js');
 
 class FakeNode {
   constructor() {
-    this.gain = { value: 1, setTargetAtTime(value) { this.value = value; } };
+    this.gain = {
+      value: 1, calls: [],
+      cancelScheduledValues(time) { this.calls.push(['cancel', time]); },
+      setValueAtTime(value, time) { this.value = value; this.calls.push(['value', value, time]); },
+      setTargetAtTime(value, time, constant) {
+        this.value = value; this.calls.push(['target', value, time, constant]);
+      }
+    };
     this.disconnected = false;
   }
   connect() {}
@@ -152,5 +159,119 @@ test('float WAV non-finite samples are silenced and reported', async () => {
     sample: frame => frame === 0 ? NaN : 0.25 }).blob }]);
   assert.ok(report.warnings.some(warning => /1 invalid floating-point/.test(warning)));
   assert.equal(engine._tracks.get('a').buffer.getChannelData(0)[0], 0);
+  engine.dispose();
+});
+
+test('source inspection reads only WAV headers, uses the shortest timeline and leaves playback intact', async () => {
+  const engine = new OrchAudioEngine();
+  await engine.load([{ id: 'loaded', file: wav().blob }]);
+  await engine.play();
+  const sources = engine._sources.slice();
+  const reads = [];
+  const entries = [{ id: 'a', ...wav({ channels: 2, frames: 16000 }) },
+    { id: 'b', ...wav({ frames: 8000 }) }].map(({ id, blob, dataOffset }) => ({ id,
+    file: { name: blob.name, size: blob.size, slice(start, end) {
+      reads.push([start, end]);
+      assert.ok(end <= dataOffset, 'metadata inspection must not read any audio samples');
+      return blob.slice(start, end);
+    } } }));
+  const report = await engine.inspect(entries);
+  assert.equal(report.duration, 1);
+  assert.equal(report.maxExcerptDuration, 1);
+  assert.deepEqual(report.tracks, [{ id: 'a', duration: 2, channels: 2, sampleRate: 8000 },
+    { id: 'b', duration: 1, channels: 1, sampleRate: 8000 }]);
+  assert.equal(report.warnings.length, 1);
+  assert.ok(reads.length > 0);
+  assert.equal(engine.duration, 1);
+  assert.equal(engine.isPlaying, true);
+  assert.deepEqual(engine._sources, sources);
+  engine.dispose();
+});
+
+test('inspection sizes a random excerpt within the memory budget without allocating full recordings', async () => {
+  const engine = new OrchAudioEngine();
+  const { bytes, dataOffset } = wav({ frames: 1, channels: 2, sampleRate: 192000 });
+  const fullFrames = 192000 * 300;
+  const fileSize = dataOffset + fullFrames * 4;
+  bytes.writeUInt32LE(fileSize - 8, 4);
+  bytes.writeUInt32LE(fullFrames * 4, dataOffset - 4);
+  const header = new Blob([bytes.subarray(0, dataOffset)]);
+  let bytesRead = 0;
+  const file = { name: 'long.wav', size: fileSize, slice(start, end) {
+    assert.ok(end <= dataOffset);
+    bytesRead += end - start;
+    return header.slice(start, end);
+  } };
+  const entries = Array.from({ length: 48 }, (_, index) => ({ id: `stem${index}`, file }));
+  const report = await engine.inspect(entries);
+  assert.equal(report.duration, 300);
+  assert.ok(report.maxExcerptDuration > 7 && report.maxExcerptDuration < 8);
+  const frames = Math.ceil(report.maxExcerptDuration * 192000);
+  const finalDecodeBytes = 48 * frames * 2 * 4 + frames * 4;
+  assert.ok(finalDecodeBytes <= OrchAudioHelpers.MEMORY_BUDGET);
+  assert.ok(bytesRead < 4000);
+  assert.equal(engine._context, null, 'WAV metadata inspection does not need AudioContext');
+  assert.equal((await engine.inspect(entries.slice(0, 1))).maxExcerptDuration, 120);
+  engine.dispose();
+});
+
+test('inspection rejects malformed headers and duplicate IDs without replacing the current excerpt', async () => {
+  const engine = new OrchAudioEngine();
+  await engine.load([{ id: 'loaded', file: wav().blob }]);
+  const broken = wav().bytes;
+  broken.writeUInt32LE(0xffffffff, 40);
+  const invalidFile = new Blob([broken]); invalidFile.name = 'broken.wav';
+  await assert.rejects(engine.inspect([{ id: 'bad', file: invalidFile }]), /truncated chunk/);
+  await assert.rejects(engine.inspect([{ id: 'a', file: wav().blob },
+    { id: 'a', file: wav().blob }]), /unique track ID/);
+  await assert.rejects(engine.inspect([]), /at least one/);
+  assert.equal(engine.duration, 1);
+  assert.ok(engine._tracks.has('loaded'));
+  engine.dispose();
+});
+
+test('unlock resumes the context in the calling gesture without starting playback', async () => {
+  const engine = new OrchAudioEngine();
+  const context = engine._ensureContext();
+  let requested = false;
+  let finishResume;
+  context.resume = () => {
+    requested = true;
+    return new Promise(resolve => { finishResume = resolve; });
+  };
+  const pending = engine.unlock();
+  assert.equal(requested, true);
+  assert.equal(engine._sources.length, 0);
+  engine.pause();
+  finishResume();
+  await pending;
+  assert.equal(engine.isPlaying, false);
+  assert.equal(engine._sources.length, 0);
+  engine.dispose();
+});
+
+test('muting before playback sets exact zero immediately, while live mute fades to a cancellable zero endpoint', async () => {
+  const engine = new OrchAudioEngine();
+  await engine.load([{ id: 'a', file: wav().blob }]);
+  const gain = engine._tracks.get('a').gain.gain;
+  engine.setGain('a', -100);
+  assert.deepEqual(gain.calls, [['cancel', 0], ['value', 0, 0]]);
+  assert.equal(gain.value, 0);
+  engine.setMaster(-24);
+  assert.deepEqual(engine._master.gain.calls, [['cancel', 0], ['value', Math.pow(10, -24 / 20), 0]]);
+  await engine.play();
+  assert.equal(gain.value, 0, 'there is no fading audible signal at the scheduled start');
+  assert.equal(gain.calls.some(call => call[0] === 'target'), false);
+  engine._context.currentTime = 0.5;
+  engine.setGain('a', 0);
+  engine.setGain('a', -100);
+  assert.deepEqual(gain.calls.slice(-3), [['cancel', 0.5], ['target', 0, 0.5, 0.015], ['value', 0, 0.62]]);
+  engine._context.currentTime = 0.55;
+  engine.setGain('a', 0);
+  assert.deepEqual(gain.calls.slice(-2), [['cancel', 0.55], ['target', 1, 0.55, 0.015]],
+    'unmuting cancels the pending zero endpoint before restoring the saved level');
+  engine.pause();
+  engine.setGain('a', -100);
+  assert.deepEqual(gain.calls.slice(-2), [['cancel', 0.55], ['value', 0, 0.55]]);
   engine.dispose();
 });

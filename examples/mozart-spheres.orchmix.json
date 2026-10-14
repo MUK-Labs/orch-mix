@@ -16,7 +16,10 @@
         "row": "front",
         "order": 10,
         "weight": 3
-      }
+      },
+      "instrument": "violin",
+      "players": 6,
+      "playersBasis": "estimate"
     },
     {
       "id": "vln2",
@@ -28,7 +31,10 @@
         "row": "front",
         "order": 20,
         "weight": 3
-      }
+      },
+      "instrument": "violin",
+      "players": 6,
+      "playersBasis": "estimate"
     },
     {
       "id": "vla",
@@ -40,7 +46,10 @@
         "row": "front",
         "order": 30,
         "weight": 2
-      }
+      },
+      "instrument": "viola",
+      "players": 4,
+      "playersBasis": "estimate"
     },
     {
       "id": "vc",
@@ -52,7 +61,10 @@
         "row": "front",
         "order": 40,
         "weight": 1.5
-      }
+      },
+      "instrument": "cello",
+      "players": 3,
+      "playersBasis": "estimate"
     },
     {
       "id": "cb",
@@ -64,7 +76,10 @@
         "row": "front",
         "order": 50,
         "weight": 1
-      }
+      },
+      "instrument": "bass",
+      "players": 2,
+      "playersBasis": "estimate"
     },
     {
       "id": "fl",
@@ -76,7 +91,10 @@
         "row": "middle",
         "order": 10,
         "weight": 1
-      }
+      },
+      "instrument": "flute",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "ob-1",
@@ -88,7 +106,10 @@
         "row": "middle",
         "order": 21,
         "weight": 1
-      }
+      },
+      "instrument": "oboe",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "ob-2",
@@ -100,7 +121,10 @@
         "row": "middle",
         "order": 22,
         "weight": 1
-      }
+      },
+      "instrument": "oboe",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "cl-1",
@@ -112,7 +136,10 @@
         "row": "middle",
         "order": 31,
         "weight": 1
-      }
+      },
+      "instrument": "clarinet",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "cl-2",
@@ -124,7 +151,10 @@
         "row": "middle",
         "order": 32,
         "weight": 1
-      }
+      },
+      "instrument": "clarinet",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "bn-1",
@@ -136,7 +166,10 @@
         "row": "middle",
         "order": 41,
         "weight": 1
-      }
+      },
+      "instrument": "bassoon",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "bn-2",
@@ -148,7 +181,10 @@
         "row": "middle",
         "order": 42,
         "weight": 1
-      }
+      },
+      "instrument": "bassoon",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "hn-1",
@@ -160,7 +196,10 @@
         "row": "back",
         "order": 11,
         "weight": 1
-      }
+      },
+      "instrument": "horn",
+      "players": 1,
+      "playersBasis": "estimate"
     },
     {
       "id": "hn-2",
@@ -172,7 +211,10 @@
         "row": "back",
         "order": 12,
         "weight": 1
-      }
+      },
+      "instrument": "horn",
+      "players": 1,
+      "playersBasis": "estimate"
     }
   ]
 }
