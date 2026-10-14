@@ -1,0 +1,178 @@
+{
+  "version": 1,
+  "title": "Mozart · Symphony No. 40 in G minor, K. 550 — The Spheres",
+  "excerpt": {
+    "start": 0,
+    "duration": 30
+  },
+  "tracks": [
+    {
+      "id": "vln1",
+      "name": "Violins I",
+      "family": "strings",
+      "file": "Violin_1.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 10,
+        "weight": 3
+      }
+    },
+    {
+      "id": "vln2",
+      "name": "Violins II",
+      "family": "strings",
+      "file": "Violin_2.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 20,
+        "weight": 3
+      }
+    },
+    {
+      "id": "vla",
+      "name": "Violas",
+      "family": "strings",
+      "file": "Viola.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 30,
+        "weight": 2
+      }
+    },
+    {
+      "id": "vc",
+      "name": "Cellos",
+      "family": "strings",
+      "file": "Cello.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 40,
+        "weight": 1.5
+      }
+    },
+    {
+      "id": "cb",
+      "name": "Double basses",
+      "family": "strings",
+      "file": "Bass.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 50,
+        "weight": 1
+      }
+    },
+    {
+      "id": "fl",
+      "name": "Flute",
+      "family": "woodwinds",
+      "file": "Flute.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 10,
+        "weight": 1
+      }
+    },
+    {
+      "id": "ob-1",
+      "name": "Oboe 1",
+      "family": "woodwinds",
+      "file": "Oboe_1.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 21,
+        "weight": 1
+      }
+    },
+    {
+      "id": "ob-2",
+      "name": "Oboe 2",
+      "family": "woodwinds",
+      "file": "Oboe_2.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 22,
+        "weight": 1
+      }
+    },
+    {
+      "id": "cl-1",
+      "name": "Clarinet 1",
+      "family": "woodwinds",
+      "file": "Clarinet_1.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 31,
+        "weight": 1
+      }
+    },
+    {
+      "id": "cl-2",
+      "name": "Clarinet 2",
+      "family": "woodwinds",
+      "file": "Clarinet_2.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 32,
+        "weight": 1
+      }
+    },
+    {
+      "id": "bn-1",
+      "name": "Bassoon 1",
+      "family": "woodwinds",
+      "file": "Bassoon_1.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 41,
+        "weight": 1
+      }
+    },
+    {
+      "id": "bn-2",
+      "name": "Bassoon 2",
+      "family": "woodwinds",
+      "file": "Bassoon_2.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 42,
+        "weight": 1
+      }
+    },
+    {
+      "id": "hn-1",
+      "name": "Horn 1",
+      "family": "brass",
+      "file": "Horn_1.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "back",
+        "order": 11,
+        "weight": 1
+      }
+    },
+    {
+      "id": "hn-2",
+      "name": "Horn 2",
+      "family": "brass",
+      "file": "Horn_2.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "back",
+        "order": 12,
+        "weight": 1
+      }
+    }
+  ]
+}
