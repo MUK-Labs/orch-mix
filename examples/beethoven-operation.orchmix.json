@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "title": "Beethoven · Symphony No. 4, I — Operation Beethoven",
+  "excerpt": {
+    "start": 0,
+    "duration": 30
+  },
+  "tracks": [
+    {
+      "id": "vln1",
+      "name": "Violins I",
+      "family": "strings",
+      "file": "oma-hkm-08-vl1.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 1,
+        "weight": 4
+      }
+    },
+    {
+      "id": "vln2",
+      "name": "Violins II",
+      "family": "strings",
+      "file": "oma-hkm-09-vl2.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 2,
+        "weight": 4
+      }
+    },
+    {
+      "id": "vla",
+      "name": "Violas",
+      "family": "strings",
+      "file": "oma-hkm-10-vla.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 3,
+        "weight": 2
+      }
+    },
+    {
+      "id": "vc",
+      "name": "Cellos",
+      "family": "strings",
+      "file": "oma-hkm-11-vlc.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 4,
+        "weight": 2
+      }
+    },
+    {
+      "id": "cb",
+      "name": "Violone",
+      "family": "strings",
+      "file": "oma-hkm-12-vlo.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 5,
+        "weight": 1
+      }
+    },
+    {
+      "id": "fl",
+      "name": "Flute",
+      "family": "woodwinds",
+      "file": "oma-hkm-01-fl.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 1,
+        "weight": 1
+      }
+    },
+    {
+      "id": "ob",
+      "name": "Oboes",
+      "family": "woodwinds",
+      "file": "oma-hkm-02-ob.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 2,
+        "weight": 2
+      }
+    },
+    {
+      "id": "cl",
+      "name": "Clarinets",
+      "family": "woodwinds",
+      "file": "oma-hkm-03-kl.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 3,
+        "weight": 2
+      }
+    },
+    {
+      "id": "bn",
+      "name": "Bassoons",
+      "family": "woodwinds",
+      "file": "oma-hkm-04-fg.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 4,
+        "weight": 2
+      }
+    },
+    {
+      "id": "hn",
+      "name": "Horns",
+      "family": "brass",
+      "file": "oma-hkm-05-hrn.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "back",
+        "order": 1,
+        "weight": 2
+      }
+    },
+    {
+      "id": "trp",
+      "name": "Trumpets",
+      "family": "brass",
+      "file": "oma-hkm-06-trp.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "back",
+        "order": 2,
+        "weight": 2
+      }
+    },
+    {
+      "id": "timp",
+      "name": "Timpani",
+      "family": "percussion",
+      "file": "oma-hkm-07-pk.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "rear",
+        "order": 1,
+        "weight": 1
+      }
+    }
+  ]
+}

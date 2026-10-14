@@ -35,7 +35,7 @@ The *pp–ff* marks are an intuitive playback scale, not an acoustic simulation 
 
 **[The audio source guide](docs/AUDIO-SOURCES.md)** contains original publisher pages, direct downloads, source credits, licence details and local-use qualifications.
 
-- **Operation Beethoven:** twelve real orchestral section tracks, available separately as WAV or MP3. A useful first source under CC BY 4.0.
+- **Operation Beethoven:** twelve real orchestral section tracks, available separately as WAV or MP3. A useful first source under CC BY 4.0. Use the [ready-to-load WAV session](examples/beethoven-operation.orchmix.json) and [confirmed player-count notes](docs/BEETHOVEN-OPERATION.md).
 - **The Spheres:** Mozart’s Symphony No. 40 and Tchaikovsky’s *Romeo and Juliet*. Choose the **StereoMix** archive containing individual stereo stems. Ready-to-load WAV sessions: [Mozart · 14 stems](examples/mozart-spheres.orchmix.json) ([seating notes](docs/MOZART-SPHERES.md)) and [Tchaikovsky · 33 stems](examples/tchaikovsky-spheres.orchmix.json) ([seating notes](docs/TCHAIKOVSKY-SPHERES.md)).
 - **SynthSOD / URMP:** further orchestral renderings and smaller recorded ensembles.
 - **PHENICX, ECHO and OrchPlay:** interesting additional materials, with their own usage restrictions. Local playback does not grant rights to every teaching, export or recording activity.
