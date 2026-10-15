@@ -2,13 +2,14 @@
   'use strict';
   const M = window.OrchModel;
   const MIDI_SLOTS = window.OrchMidi.SLOT_COUNT;
+  const MIDI_ACTION_LABELS = { playPause: 'Play / pause', allOff: 'All off / restore', randomInstrument: 'Random instrument' };
   const $ = id => document.getElementById(id);
   const engine = new window.OrchAudioEngine();
   const library = new window.OrchLibrary();
-  let midi;
+  let midi, pendingPlay = null;
   const state = {
     tracks: [], loaded: false, demo: false, challenge: false, revealed: false,
-    referenceListening: false, refs: {}, offsets: {}, controls: {}, muted: new Set(), solo: new Set(),
+    referenceListening: false, refs: {}, offsets: {}, controls: {}, muted: new Set(), solo: new Set(), muteSnapshot: null,
     activeIds: [], title: '', excerpt: { start: 0, duration: 30 }, cards: new Map(), regions: new Map(), selectedId: null,
     files: [], pending: [], manifest: null, manifestBase: '', explicitManifest: false, selectionToken: 0, loading: false, loop: true,
     mystery: false, answerRevealed: false, libraryEntries: [], selectedLibraryId: '', midiBank: 0
@@ -22,10 +23,18 @@
   function currentGain(track) { return clamp(state.challenge ? state.refs[track.id] + state.offsets[track.id] + state.controls[track.id] : state.controls[track.id], -60, 18); }
   function actualGains() { return Object.fromEntries(state.tracks.map(t => [t.id, currentGain(t)])); }
   function score() { return M.scoreBalance(actualGains(), state.refs, state.activeIds); }
+  function isSilent(id) { return !state.referenceListening && (state.muted.has(id) || (state.solo.size > 0 && !state.solo.has(id))); }
+  function renderInstrumentActions() {
+    const allMuted = state.loaded && state.tracks.every(t => isSilent(t.id));
+    $('all-off').textContent = allMuted ? state.muteSnapshot ? 'Restore instruments' : 'All on' : 'All off';
+    $('all-off').setAttribute('aria-pressed', String(allMuted));
+    $('all-off').title = allMuted ? state.muteSnapshot ? 'Restore the instrument selection before All off' : 'Turn all instruments on' : 'Mute all instruments and remember the current selection';
+    $('random-instrument').disabled = !state.loaded || state.loading || !state.tracks.some(t => isSilent(t.id));
+  }
   function applyGains() {
     if (!state.loaded) return;
     for (const t of state.tracks) {
-      const silent = !state.referenceListening && (state.muted.has(t.id) || (state.solo.size && !state.solo.has(t.id)));
+      const silent = isSilent(t.id);
       engine.setGain(t.id, silent ? -100 : state.referenceListening ? state.refs[t.id] : currentGain(t));
       state.cards.get(t.id)?.element.classList.toggle('muted', Boolean(silent));
       state.regions.get(t.id)?.classList.toggle('muted', Boolean(silent));
@@ -33,6 +42,7 @@
     }
   }
   function renderReadouts() {
+    renderInstrumentActions();
     $('set-reference').disabled = !state.loaded || state.loading || state.referenceListening || state.muted.size > 0 || state.solo.size > 0;
     $('set-reference').title = state.referenceListening ? 'Return to your mix before setting a reference' : (state.muted.size || state.solo.size) ? 'Clear mute and solo to set the complete reference mix' : 'Use the current complete mix as the reference';
     const result = state.challenge && state.revealed ? score() : null;
@@ -62,8 +72,7 @@
     $('score').hidden = !result;
     if (result) $('score').textContent = result.count < 2 ? 'Not enough active parts' : result.score + '% · ' + result.meanAbsoluteError.toFixed(1) + ' dB mean error';
   }
-  function toggleTrack(id) {
-    if (!state.loaded || state.loading) return;
+  function leaveReferenceAndSolo() {
     if (state.referenceListening) { state.muted.clear(); state.solo.clear(); }
     // Turn a solo selection into ordinary mutes before toggling a region.
     // This preserves which other parts can currently be heard.
@@ -72,14 +81,39 @@
       state.solo.clear();
     }
     state.referenceListening = false;
+  }
+  function toggleTrack(id) {
+    if (!state.loaded || state.loading) return;
+    state.muteSnapshot = null;
+    leaveReferenceAndSolo();
     if (state.muted.has(id)) state.muted.delete(id); else state.muted.add(id);
     selectTrack(id, false); applyGains(); refreshMode();
   }
   function allOff() {
     if (!state.loaded || state.loading) return;
-    state.referenceListening = false; state.solo.clear();
-    state.tracks.forEach(t => state.muted.add(t.id));
-    applyGains(); refreshMode(); status('All instruments off. Click a section to bring it in; fader levels are unchanged.');
+    if (state.tracks.every(t => isSilent(t.id))) {
+      const previous = state.muteSnapshot;
+      state.muted = new Set(previous?.muted || []); state.solo = new Set(previous?.solo || []);
+      state.referenceListening = previous?.referenceListening || false;
+      state.muteSnapshot = null;
+      status(previous ? 'Previous instrument selection restored. Fader levels are unchanged.' : 'All instruments on. Fader levels are unchanged.');
+    } else {
+      state.muteSnapshot = { muted: new Set(state.muted), solo: new Set(state.solo), referenceListening: state.referenceListening };
+      state.referenceListening = false; state.solo.clear();
+      state.tracks.forEach(t => state.muted.add(t.id));
+      status('All instruments off. Press again to restore the selection, or bring in individual parts.');
+    }
+    applyGains(); refreshMode();
+  }
+  function randomInstrument() {
+    if (!state.loaded || state.loading) return;
+    const candidates = state.tracks.filter(t => isSilent(t.id));
+    if (!candidates.length) return;
+    const track = candidates[Math.floor(Math.random() * candidates.length)];
+    state.muteSnapshot = null;
+    leaveReferenceAndSolo(); state.muted.delete(track.id);
+    selectTrack(track.id, false); applyGains(); refreshMode();
+    status('One more instrument is on. Fader levels are unchanged.');
   }
   function svgNode(tag, attributes, text) {
     const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -152,7 +186,7 @@
       const solo = document.createElement('button'); solo.textContent = 'S'; solo.setAttribute('aria-label', 'Solo ' + t.name); solo.title = 'Solo ' + t.name;
       const mute = document.createElement('button'); mute.textContent = 'M'; mute.setAttribute('aria-label', 'Mute ' + t.name); mute.title = 'Mute ' + t.name;
       solo.disabled = mute.disabled = !state.loaded;
-      solo.addEventListener('click', () => { if (state.referenceListening || state.loading) return; if (state.solo.has(t.id)) state.solo.delete(t.id); else state.solo.add(t.id); applyGains(); renderReadouts(); });
+      solo.addEventListener('click', () => { if (state.referenceListening || state.loading) return; state.muteSnapshot = null; if (state.solo.has(t.id)) state.solo.delete(t.id); else state.solo.add(t.id); applyGains(); renderReadouts(); });
       mute.addEventListener('click', () => toggleTrack(t.id));
       buttons.append(solo, mute); controls.append(dynamics, wrap, buttons);
       const value = document.createElement('p'); value.className = 'instrument-value';
@@ -210,10 +244,11 @@
     $('excerpt-label').textContent = hidden ? 'MYSTERY EXCERPT' : state.demo ? 'GENERATED DEMO' : 'EXCERPT ' + fmt(state.excerpt.start) + ' – ' + fmt(state.excerpt.start + engine.duration);
   }
   function finishLoad(tracks, info, title, excerpt, demo, mystery) {
+    pendingPlay = null;
     state.tracks = tracks; state.loaded = true; state.demo = Boolean(demo); state.title = title; state.excerpt = excerpt;
     state.refs = Object.fromEntries(tracks.map(t => [t.id, t.referenceDb || 0])); state.controls = { ...state.refs };
     state.challenge = false; state.revealed = false; state.referenceListening = false; state.offsets = {};
-    state.muted.clear(); state.solo.clear();
+    state.muted.clear(); state.solo.clear(); state.muteSnapshot = null;
     state.mystery = Boolean(mystery); state.answerRevealed = false; state.midiBank = 0;
     if (state.mystery) tracks.forEach(t => state.muted.add(t.id));
     state.activeIds = tracks.filter(t => info.tracks.find(i => i.id === t.id)?.active !== false).map(t => t.id);
@@ -240,8 +275,16 @@
   }
   async function togglePlay() {
     if (!state.loaded || state.loading) return;
-    try { if (engine.isPlaying) engine.pause(); else await engine.play(); updateTransport(); }
+    // A second press can arrive while the audio context is still resuming.
+    // Pause cancels that pending start; an older completion cannot clear a new one.
+    const request = {};
+    try {
+      if (engine.isPlaying || pendingPlay) { pendingPlay = null; engine.pause(); }
+      else { pendingPlay = request; await engine.play(); }
+      updateTransport();
+    }
     catch (error) { status(error.message, true); }
+    finally { if (pendingPlay === request) pendingPlay = null; }
   }
   function updateTransport() { $('play-button').textContent = engine.isPlaying ? 'Ⅱ' : '▶'; $('play-button').setAttribute('aria-label', engine.isPlaying ? 'Pause' : 'Play'); }
   function challenge() {
@@ -249,11 +292,12 @@
     state.mystery = false; renderIdentity();
     state.challenge = true; state.revealed = false; state.referenceListening = false;
     state.offsets = M.randomizedOffsets(state.tracks.map(t => t.id)); state.controls = Object.fromEntries(state.tracks.map(t => [t.id, 0]));
-    state.muted.clear(); state.solo.clear(); renderStage(); applyGains(); refreshMode();
+    state.muted.clear(); state.solo.clear(); state.muteSnapshot = null; renderStage(); applyGains(); refreshMode();
     status('Balance the active parts. You can compare with the reference at any time.');
   }
   function explore() {
     if (state.loading) return;
+    state.muteSnapshot = null;
     if (state.mystery) { state.mystery = false; renderIdentity(); refreshMode(); setLoading(false); status('Exploration. The current instrument choices and levels are preserved.'); }
     if (!state.challenge) return;
     state.controls = Object.fromEntries(state.tracks.map(t => [t.id, clamp(currentGain(t), -48, 12)]));
@@ -509,9 +553,17 @@
     bank.value = String(state.midiBank); bank.disabled = state.loading;
     $('midi-connect').disabled = !info.supported || info.connecting || info.connected;
     $('midi-connect').textContent = info.connecting ? 'Connecting…' : info.connected ? 'MIDI connected' : 'Connect MIDI';
-    $('midi-cancel').hidden = info.learning === null;
-    $('midi-clear').disabled = !info.mappings.some(Boolean);
-    $('midi-status').textContent = info.error || (!info.supported ? 'Web MIDI needs a supported browser such as Chrome or Edge on a secure local address.' : info.learning !== null ? 'Move a fader or knob to learn control ' + (info.learning + 1) + '…' : info.connected ? info.inputs.length ? info.inputs.map(input => input.name).join(', ') : 'MIDI enabled. Plug in your controller.' : 'Connect your controller, then learn a fader or knob below.') + (info.storageAvailable ? '' : ' Mappings cannot be saved in this browser session.');
+    $('midi-cancel').hidden = info.learning === null && info.learningAction === null;
+    $('midi-clear').disabled = !info.mappings.some(Boolean) && !Object.values(info.actionMappings).some(Boolean);
+    $('midi-status').textContent = info.error || (!info.supported ? 'Web MIDI needs a supported browser such as Chrome or Edge on a secure local address.' : info.learningAction !== null ? 'Press a controller button to learn ' + MIDI_ACTION_LABELS[info.learningAction] + '…' : info.learning !== null ? 'Move a fader or knob to learn control ' + (info.learning + 1) + '…' : info.connected ? info.inputs.length ? info.inputs.map(input => input.name).join(', ') : 'MIDI enabled. Plug in your controller.' : 'Connect your controller, then learn a volume control or an action.') + (info.storageAvailable ? '' : ' Mappings cannot be saved in this browser session.');
+    for (const [action, label] of Object.entries(MIDI_ACTION_LABELS)) {
+      const mapping = info.actionMappings[action], learning = info.learningAction === action;
+      const button = $('midi-learn-' + action);
+      button.disabled = !info.connected || state.loading;
+      button.textContent = learning ? 'Press button…' : mapping ? 'CC ' + mapping.controller + ' · relearn' : 'Learn';
+      button.title = mapping ? label + ': MIDI channel ' + (mapping.channel + 1) + ', CC ' + mapping.controller : 'Assign a MIDI button to ' + label;
+      $('midi-clear-' + action).disabled = !mapping;
+    }
     for (const [index, ui] of Array.from(state.cards.values()).entries()) {
       const slot = index % MIDI_SLOTS, active = Math.floor(index / MIDI_SLOTS) === state.midiBank;
       const map = info.mappings[slot];
@@ -533,6 +585,11 @@
   $('random-excerpt').addEventListener('click', randomExcerpt);
   $('reveal-piece').addEventListener('click', () => { state.answerRevealed = true; renderIdentity(); refreshMode(); status('Answer revealed. Your instrument choices and fader levels are unchanged.'); });
   $('all-off').addEventListener('click', allOff);
+  $('random-instrument').addEventListener('click', randomInstrument);
+  for (const action of Object.keys(MIDI_ACTION_LABELS)) {
+    $('midi-learn-' + action).addEventListener('click', () => midi.learnAction(action));
+    $('midi-clear-' + action).addEventListener('click', () => midi.clearAction(action));
+  }
   $('midi-toggle').addEventListener('click', () => { $('midi-panel').hidden = !$('midi-panel').hidden; $('midi-toggle').setAttribute('aria-expanded', String(!$('midi-panel').hidden)); if ($('midi-panel').hidden) midi.cancelLearn(); renderMidi(); });
   $('midi-connect').addEventListener('click', () => midi.connect());
   $('midi-bank').addEventListener('change', e => { state.midiBank = Number(e.target.value); midi.cancelLearn(); renderMidi(); });
@@ -547,13 +604,13 @@
   $('seek').addEventListener('input', e => { engine.seek(Number(e.target.value)); });
   $('master-volume').addEventListener('input', e => { engine.setMaster(Number(e.target.value)); $('master-value').textContent = e.target.value + ' dB'; });
   $('loop-button').addEventListener('click', () => { state.loop = !state.loop; engine.setLoop(state.loop); $('loop-button').classList.toggle('active', state.loop); $('loop-button').setAttribute('aria-pressed', String(state.loop)); });
-  $('reference-button').addEventListener('click', () => { state.referenceListening = !state.referenceListening; applyGains(); refreshMode(); });
+  $('reference-button').addEventListener('click', () => { state.muteSnapshot = null; state.referenceListening = !state.referenceListening; applyGains(); refreshMode(); });
     $('set-reference').addEventListener('click', () => { if (state.referenceListening || state.muted.size || state.solo.size) return; state.refs = actualGains(); applyGains(); status('Your current balance is now the reference. Save session settings to keep it.'); });
   $('challenge-mode').addEventListener('click', () => { if (!state.challenge) challenge(); }); $('scramble-button').addEventListener('click', challenge); $('explore-mode').addEventListener('click', explore);
-  $('reveal-button').addEventListener('click', () => { state.revealed = !state.revealed; state.referenceListening = false; state.muted.clear(); state.solo.clear(); applyGains(); refreshMode(); if (state.revealed) status('Comparison uses relative balance across active parts; a common volume offset is ignored.'); });
+  $('reveal-button').addEventListener('click', () => { state.revealed = !state.revealed; state.referenceListening = false; state.muteSnapshot = null; state.muted.clear(); state.solo.clear(); applyGains(); refreshMode(); if (state.revealed) status('Comparison uses relative balance across active parts; a common volume offset is ignored.'); });
   $('reset-button').addEventListener('click', () => {
     state.controls = Object.fromEntries(state.tracks.map(t => [t.id, state.challenge ? -state.offsets[t.id] : state.refs[t.id]]));
-    state.muted.clear(); state.solo.clear(); state.referenceListening = false; if (state.challenge) state.revealed = true;
+    state.muted.clear(); state.solo.clear(); state.referenceListening = false; state.muteSnapshot = null; if (state.challenge) state.revealed = true;
     applyGains(); refreshMode(); status('Reference balance restored.');
   });
   $('save-button').addEventListener('click', saveSession);
@@ -580,7 +637,12 @@
     }
     requestAnimationFrame(animate);
   }
-  midi = new window.OrchMidi({ onChange: renderMidi, onValue: ({ slot, value }) => {
+  midi = new window.OrchMidi({ onChange: renderMidi, onAction: ({ action }) => {
+    if (!state.loaded || state.loading) return;
+    if (action === 'playPause') togglePlay();
+    else if (action === 'allOff') allOff();
+    else if (action === 'randomInstrument') randomInstrument();
+  }, onValue: ({ slot, value }) => {
     if (!state.loaded || state.loading || state.referenceListening) return;
     const [id, ui] = Array.from(state.cards.entries())[state.midiBank * MIDI_SLOTS + slot] || [];
     if (!ui) return;

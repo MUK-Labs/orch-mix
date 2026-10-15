@@ -219,6 +219,23 @@ h2{
   flex-basis:100%;
   margin:0;
   color:#748997}
+.midi-actions{
+  display:flex;
+  flex-wrap:wrap;
+  flex-basis:100%;
+  gap:8px 12px}
+.midi-action{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:8px 10px;
+  font-size:11px;
+  color:var(--cream)}
+.midi-action .quiet{
+  font-size:10px}
 .midi-learn{
   display:block;
   margin:10px auto 0;
@@ -564,6 +581,7 @@ h2{
   color:#84d2ad}
 .stage-footer{
   display:flex;
+  flex-wrap:wrap;
   align-items:center;
   justify-content:space-between;
   border-top:1px solid #ffffff08;

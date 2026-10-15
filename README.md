@@ -11,7 +11,7 @@ For ordinary playback without Python, open `index.html` directly in your desktop
 1. Select **Try the sound demo** to test the controls immediately. This is generated demonstration audio, not a recording of an orchestra.
 2. Select **Load stems** to open synchronized audio files or one folder containing a piece’s stems. A single `.orchmix.json` in that folder supplies the instrument labels, seating and reference levels automatically.
 3. Choose an excerpt start and length (30 seconds by default), review the instrument names and families, then **Open excerpt**.
-4. Press play. Adjust the faders with a drag, mouse wheel or arrow keys. Click a polygon to turn its part off or on without moving its fader. **All off** mutes the whole orchestra; **S** solos a part and **M** mutes it in the mixer.
+4. Press play. Adjust the faders with a drag, mouse wheel or arrow keys. Click a polygon to turn its part off or on without moving its fader. **All off** silences the orchestra; press **Restore instruments** to return to the previous selection. **Random instrument** adds one randomly chosen part that is currently off. **S** solos a part and **M** mutes it in the mixer.
 
 For the remembered piece library and MIDI controller, use **Chrome or Edge**, the same browser profile and the same local address each time. The macOS launcher handles the server; to start it manually instead:
 
@@ -25,7 +25,7 @@ Open `http://127.0.0.1:8765/`. The server binds only to your computer and serves
 
 Use **Remember folder** once for each folder of synchronized stems, ideally with its `.orchmix.json`. Saved pieces appear in the dropdown; select one and use **Open**. The browser remembers a folder handle and its label, not an audio copy or an absolute filesystem path. It may ask you to grant access again. Use the same browser profile and local address to keep the same library.
 
-**Random excerpt** chooses a saved piece and a valid starting point, conceals its title, and begins with every part muted. Click the polygons to introduce instruments one by one, then use **Reveal piece** when the participants have a guess. It uses folders whose read permission is already granted; open a locked folder once to make it available. Keep one valid `.orchmix.json` in each remembered folder for this mode. For full-length recordings, use PCM WAV stems: their durations and excerpts can be read without decoding the complete piece. Short compressed files remain subject to the usual size and duration limits. The excerpt length defaults to 30 seconds and is editable; a short recording or the audio memory budget can shorten it.
+**Random excerpt** chooses a saved piece and a valid starting point, conceals its title, and begins with every part muted. Click the polygons to introduce instruments one by one, or use **Random instrument** to add a randomly chosen part without revealing the title. Use **Reveal piece** when the participants have a guess. It uses folders whose read permission is already granted; open a locked folder once to make it available. Keep one valid `.orchmix.json` in each remembered folder for this mode. For full-length recordings, use PCM WAV stems: their durations and excerpts can be read without decoding the complete piece. Short compressed files remain subject to the usual size and duration limits. The excerpt length defaults to 30 seconds and is editable; a short recording or the audio memory budget can shorten it.
 
 Removing a saved piece only removes its library entry. Clearing this site's browser data also clears the remembered library; your recordings remain in their folders. See [local library and MIDI setup](docs/LOCAL-USE.md#remember-your-piece-folders).
 
@@ -43,7 +43,11 @@ The *pp–ff* marks are an intuitive playback scale, not an acoustic simulation 
 
 ## Use a MIDI controller
 
-Connect the Korg nanoKONTROL2, open **MIDI controller**, choose **Connect MIDI**, then select **Learn** on a mixer channel and move the physical fader or knob you want to assign. **Sixteen controls work at once:** for example, learn the eight faders on channels 1–8 and the eight knobs on channels 9–16. **Control bank** switches the same mappings to channels 17–32, then 33–48 as needed. Existing eight-control mappings remain in slots 1–8; learn the knobs once to add slots 9–16. Mappings are remembered in this browser. On reopening, the app reconnects automatically only when MIDI permission has already been granted; otherwise choose **Connect MIDI** again. MIDI changes fader levels and leaves mute choices intact. See [the MIDI instructions](docs/LOCAL-USE.md#control-the-faders-with-midi).
+Connect the Korg nanoKONTROL2, open **MIDI controller**, choose **Connect MIDI**, then select **Learn** on a mixer channel and move the physical fader or knob you want to assign. **Sixteen volume controls work at once:** for example, learn the eight faders on channels 1–8 and the eight knobs on channels 9–16. **Control bank** switches the same mappings to channels 17–32, then 33–48 as needed. Existing eight-control mappings remain in slots 1–8; learn the knobs once to add slots 9–16. Moving a volume control leaves mute choices intact.
+
+Three additional **Learn** buttons assign separate CCs to **Play / pause**, **All off / restore**, and **Random instrument**. They work in every bank without using any of the 16 volume slots. Use momentary buttons that send 127 when pressed and 0 when released: every nonzero message performs the action, while zero is ignored. The learning press only saves the assignment. Play / pause resumes at the paused position; All off / restore recalls the previous instrument selection; Random instrument enables one part that is currently off without changing fader levels or revealing the piece.
+
+All mappings are remembered in this browser; existing assignments survive the update. On reopening, the app reconnects automatically only when MIDI permission has already been granted; otherwise choose **Connect MIDI** again. See [the MIDI instructions](docs/LOCAL-USE.md#control-the-faders-with-midi).
 
 ## Get recordings
 
@@ -118,7 +122,7 @@ Plain HTML/CSS/JavaScript, with no runtime dependencies:
 - `app/layout.js`: adaptive polygon seating geometry.
 - `app/instruments.js`: instrument symbols and player-count display.
 - `app/library.js`: locally remembered, permission-controlled piece folders.
-- `app/midi.js`: MIDI input, fader learning and saved controller mappings.
+- `app/midi.js`: MIDI input, volume/action learning and saved controller mappings.
 - `scripts/`: optional Python standard-library utilities; preparation also needs FFmpeg.
 
 Run the focused unit tests with Node.js:

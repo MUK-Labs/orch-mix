@@ -112,6 +112,7 @@ function installBrowserFixtures() {
   let Engine;
   Object.defineProperty(window, 'OrchAudioEngine', { configurable: true, get: () => Engine, set: Original => {
     Engine = class extends Original {
+      constructor(...args) { super(...args); test.engine = this; }
       async load(entries, options) { test.loads.push({ ids: entries.map(entry => entry.id), ...options, onProgress: undefined }); return super.load(entries, options); }
       setGain(id, gain) { test.gains[id] = gain; return super.setGain(id, gain); }
       async play() { test.plays.push({ ...test.gains }); return super.play(); }
@@ -132,6 +133,12 @@ async function openSaved(page, name) {
 }
 async function allMuted(page) {
   return page.locator('.instrument .track-buttons button[aria-label^="Mute "]').evaluateAll(buttons => buttons.length > 0 && buttons.every(button => button.getAttribute('aria-pressed') === 'true'));
+}
+async function trackSelection(page) {
+  return page.locator('.instrument .track-buttons button').evaluateAll(buttons => buttons.map(button => button.getAttribute('aria-pressed')));
+}
+async function audibleTracks(page) {
+  return page.locator('.orchestra-region[data-track]').evaluateAll(regions => regions.map(region => region.dataset.track).filter(id => window.__orchTest.gains[id] > -100).sort());
 }
 
 (async () => {
@@ -311,9 +318,130 @@ async function allMuted(page) {
     await openSaved(page, /many-parts|Twenty-part/);
     await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 23, 0]));
     assert.equal(await page.locator('.instrument').nth(15).locator('.wheel').inputValue(), '-48', 'Control 16 survives reloading the app');
+
+    // Global button actions have their own learned CCs, independent of all
+    // sixteen volume controls and of the selected volume-control bank.
+    if (await page.locator('#midi-learn-playPause').isHidden()) await page.locator('#midi-toggle').click();
+    const beforeActionLearn = await trackSelection(page);
+    const actionLevels = await page.locator('.wheel').evaluateAll(inputs => inputs.map(input => input.value));
+    for (const [action, controller] of [['playPause', 40], ['allOff', 41], ['randomInstrument', 42]]) {
+      await page.locator('#midi-learn-' + action).click();
+      await page.evaluate(cc => window.__orchTest.sendMidi([0xb0, cc, 127]), controller);
+      assert.equal(await page.locator('#play-button').getAttribute('aria-label'), 'Play', 'Learning a button action must not start playback');
+      assert.deepEqual(await trackSelection(page), beforeActionLearn, 'Learning a button action must not change the selected instruments');
+    }
+    await page.evaluate(() => [40, 41, 42].forEach(cc => window.__orchTest.sendMidi([0xb0, cc, 0])));
+    assert.equal(await page.locator('#play-button').getAttribute('aria-label'), 'Play', 'Zero-valued transport releases do nothing');
+    assert.deepEqual(await trackSelection(page), beforeActionLearn, 'Zero-valued instrument button releases do nothing');
+    assert.deepEqual(await page.locator('.wheel').evaluateAll(inputs => inputs.map(input => input.value)), actionLevels);
+
+    const rapidTransport = await page.evaluate(async () => {
+      const engine = window.__orchTest.engine, context = engine._context;
+      const originalResume = context.resume;
+      let releaseResume;
+      const waitingForResume = new Promise(resolve => { releaseResume = resolve; });
+      context.resume = () => waitingForResume;
+      try {
+        window.__orchTest.sendMidi([0xb0, 40, 127]);
+        window.__orchTest.sendMidi([0xb0, 40, 127]);
+        releaseResume();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        return { playing: engine.isPlaying, position: engine.currentTime };
+      } finally { context.resume = originalResume; }
+    });
+    assert.equal(rapidTransport.playing, false, 'A second transport press cancels a start still awaiting AudioContext.resume');
+    assert.equal(rapidTransport.position, 0, 'Cancelling a pending start does not advance the excerpt');
+
+    await page.locator('#seek').fill('2');
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 40, 1]));
+    await page.waitForFunction(() => window.__orchTest.engine.isPlaying && window.__orchTest.engine.currentTime >= 2.1);
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 40, 127]));
+    await page.waitForFunction(() => !window.__orchTest.engine.isPlaying);
+    const pausedAt = await page.evaluate(() => window.__orchTest.engine.currentTime);
+    assert.ok(pausedAt >= 2.1, 'Start/stop pauses at the current position');
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 40, 0]));
+    assert.equal(await page.evaluate(() => window.__orchTest.engine.currentTime), pausedAt, 'Release does not resume or rewind');
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 40, 127]));
+    await page.waitForFunction(paused => window.__orchTest.engine.isPlaying && window.__orchTest.engine.currentTime > paused, pausedAt);
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 40, 127]));
+    await page.waitForFunction(() => !window.__orchTest.engine.isPlaying);
+
+    await page.getByRole('button', { name: 'Mute Part 2', exact: true }).click();
+    await page.getByRole('button', { name: 'Solo Part 1', exact: true }).click();
+    const selectiveMix = await trackSelection(page);
+    await page.locator('#midi-bank').selectOption('1');
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 41, 127]));
+    assert.equal(await allMuted(page), true, 'All-off action works even on a later volume-control bank');
+    assert.equal(await page.locator('#all-off').getAttribute('aria-pressed'), 'true');
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 41, 0]));
+    assert.equal(await allMuted(page), true, 'All-off release does not restore instruments');
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 41, 1]));
+    assert.deepEqual(await trackSelection(page), selectiveMix, 'A second press restores the previous mute and solo selection');
+    assert.equal(await page.locator('#all-off').getAttribute('aria-pressed'), 'false');
+    assert.deepEqual(await audibleTracks(page), ['part-1']);
+
+    let audible = await audibleTracks(page);
+    for (let count = audible.length; count < 20; count++) {
+      // Exercise the screen button once as well as the learned hardware action.
+      if (count === 1) await page.locator('#random-instrument').click();
+      else await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 42, 127]));
+      const next = await audibleTracks(page);
+      assert.equal(next.length, audible.length + 1, 'Random instrument adds exactly one inaudible stem');
+      assert.equal(audible.every(id => next.includes(id)), true, 'Previously audible instruments stay audible, including a soloed part');
+      audible = next;
+    }
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 42, 127]));
+    assert.deepEqual(await audibleTracks(page), audible, 'Random instrument is a no-op once every stem is audible');
+    assert.deepEqual(await page.locator('.wheel').evaluateAll(inputs => inputs.map(input => input.value)), actionLevels, 'Button actions never alter fader levels');
+    await page.locator('#all-off').click();
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 42, 0]));
+    assert.equal(await allMuted(page), true, 'Random-instrument release never adds a part');
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 42, 1]));
+    assert.equal((await audibleTracks(page)).length, 1);
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 41, 127]));
+    assert.equal(await allMuted(page), true);
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 41, 127]));
+    assert.equal((await audibleTracks(page)).length, 1, 'Random selection invalidates a stale all-off restore snapshot');
+    await page.screenshot({ path: path.join(temp, 'midi-button-actions.png'), fullPage: true });
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'The MIDI action controls fit a narrow screen');
+    await page.screenshot({ path: path.join(temp, 'midi-button-actions-mobile.png'), fullPage: true });
+    await page.setViewportSize({ width: 1440, height: 1060 });
+
+    await page.reload();
+    await page.waitForFunction(() => window.__orchTest.midiRequests.length === 1);
+    await openSaved(page, /many-parts|Twenty-part/);
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 41, 127]));
+    assert.equal(await allMuted(page), true, 'All-off mapping survives reload');
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 42, 127]));
+    assert.equal((await audibleTracks(page)).length, 1, 'Random-instrument mapping survives reload');
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 40, 127]));
+    await page.waitForFunction(() => window.__orchTest.engine.isPlaying);
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 40, 127]));
+    await page.waitForFunction(() => !window.__orchTest.engine.isPlaying);
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 23, 127]));
+    assert.equal(await page.locator('.instrument').nth(15).locator('.wheel').inputValue(), '12', 'Learning global actions preserves volume-control mappings');
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 41, 127]));
+    assert.equal(await allMuted(page), true);
+    await openSaved(page, /first-piece|First Secret/);
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 41, 127]));
+    assert.equal(await allMuted(page), true);
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 41, 127]));
+    assert.equal((await audibleTracks(page)).length, 12, 'Changing the piece discards the previous piece\'s restore snapshot');
+
+    await page.locator('#random-duration').fill('5');
+    await page.locator('#random-excerpt').click();
+    await page.waitForFunction(() => !document.querySelector('#reveal-piece').hidden && window.__orchTest.engine.isPlaying);
+    assert.equal(await allMuted(page), true);
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 42, 127]));
+    assert.equal((await audibleTracks(page)).length, 1, 'A learned button can introduce the first part of a mystery excerpt');
+    assert.equal(await page.locator('#piece-title').textContent(), 'What is the piece?');
+    assert.equal(await page.locator('#saved-picker').isHidden(), true, 'Adding a random instrument never reveals the mystery answer');
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 40, 127]));
+    await page.waitForFunction(() => !window.__orchTest.engine.isPlaying);
     assert.deepEqual(remote, []);
     assert.deepEqual(errors, []);
-    console.log('PASS: remembered folders and titles survive reload; real local WAV load; common-duration random start; concealed answer; first playback fully muted; polygon/keyboard toggles preserve levels; answer reveal preserves mute; 25 musician symbols; 16-control MIDI learn, independent faders/knobs, bank switching, short final bank and automatic restoration; permission/moved-folder/invalid-session recovery; responsive width; no external requests.');
+    console.log('PASS: remembered folders and titles survive reload; real local WAV load; common-duration random start; concealed answer; first playback fully muted; polygon/keyboard toggles preserve levels; answer reveal preserves mute; 25 musician symbols; 16-control MIDI learn, independent faders/knobs, bank switching, short final bank and automatic restoration; learned global play/pause, all-off/restore and random-instrument actions, zero-release handling, solo-preserving random selection and reload persistence; permission/moved-folder/invalid-session recovery; responsive width; no external requests.');
     console.log('Feature screenshots: ' + temp);
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

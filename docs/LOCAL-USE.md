@@ -11,7 +11,7 @@ Orch Mix is an offline browser instrument for Adrián Artacho's orchestration te
 
 You can always open `index.html` directly for ordinary playback without Python. If macOS says `Start.command` is not executable, run `chmod +x Start.command` once from the repository folder, then double-click it again.
 
-The large orchestra map shows one polygon per instrumental group. Each polygon brightens with that stem’s current energy, using strings blue, woodwinds green, brass red, and percussion/harp orange. Click a polygon to mute or unmute it; its fader level stays where you set it. **All off** mutes the whole orchestra. The separate mixer below provides one vertical fader per stem. Faders change playback gain. The *pp–ff* scale describes relative playback level: it does not turn a performed fortissimo timbre into a performed pianissimo. The challenge compares a mix against a chosen reference, not a uniquely correct orchestration.
+The large orchestra map shows one polygon per instrumental group. Each polygon brightens with that stem’s current energy, using strings blue, woodwinds green, brass red, and percussion/harp orange. Click a polygon to mute or unmute it; its fader level stays where you set it. **All off** silences the orchestra and becomes **Restore instruments**, which restores the previous mute/solo selection. If everything was already muted without a saved selection, restoring enables all parts. **Random instrument** enables one randomly chosen part that is currently off, leaving the other audible parts and all fader levels unchanged; it does nothing when every part is already on. The separate mixer below provides one vertical fader per stem. Faders change playback gain. The *pp–ff* scale describes relative playback level: it does not turn a performed fortissimo timbre into a performed pianissimo. The challenge compares a mix against a chosen reference, not a uniquely correct orchestration.
 
 Select files from **one piece, one take, one microphone/mix perspective**. They need the same time origin. The app schedules stems together but cannot repair originally unsynchronized recordings. Do not normalize each file independently; that would discard the relative balance. Source naming can be ambiguous, so check the automatically assigned labels and colours.
 
@@ -37,7 +37,7 @@ The browser stores directory handles in IndexedDB, with labels for the dropdown.
 
 **Random excerpt** chooses one of the saved folders with currently granted read access and one valid `.orchmix.json`, inspects the source durations, and starts at a random point that fits inside every selected stem. A selected folder with missing or invalid settings must be corrected before it can play. The excerpt length defaults to 30 seconds; adjust the seconds field before starting. Shorter recordings or the memory budget can reduce the requested length. It uses the complete available recording rather than the session's saved start point. For full-length recordings, use compatible PCM WAV stems; short compressed files still obey the existing decoding limits. Long compressed files should first be [converted to WAV](../README.md#convert-a-whole-folder-to-wav).
 
-The piece title stays hidden and every instrument begins muted. Turn parts on by clicking their polygons, in whichever order you choose. The faders keep the loaded reference levels. **Reveal piece** shows the answer. An enabled part can still be silent during a rest; the energy display follows the actual audio.
+The piece title stays hidden and every instrument begins muted. Turn parts on by clicking their polygons, in whichever order you choose, or press **Random instrument** to add a randomly chosen part that is currently off. This keeps the title hidden and leaves the current fader levels unchanged. **Reveal piece** shows the answer. An enabled part can still be silent during a rest; the energy display follows the actual audio.
 
 For a smooth classroom session, open each library entry once before the exercise to renew any expired permissions. Random selection does not trigger a series of folder-permission prompts. It cannot select a folder whose permission is still locked.
 
@@ -45,15 +45,25 @@ For a smooth classroom session, open each library entry once before the exercise
 
 Use Chrome or Edge at the stable local address above, connect the nanoKONTROL2, open **MIDI controller**, then choose **Connect MIDI** and allow MIDI input when prompted. The app requests ordinary MIDI input, not system-exclusive access, and sends no MIDI output.
 
-Select **Learn** for a mixer channel and move a physical fader or knob to assign its MIDI Control Change message. The learning movement establishes the mapping without changing the audio level; subsequent movements control that channel's volume. The app accepts up to **16 independently learned controls** at once.
+Select **Learn** for a mixer channel and move a physical fader or knob to assign its MIDI Control Change message. The learning movement establishes the mapping without changing the audio level; subsequent movements control that channel's volume. The app accepts up to **16 independently learned volume controls**, plus three action controls.
 
-For the nanoKONTROL2, open a piece with at least 16 channels. Learn its eight physical faders on mixer channels 1–8, then its eight knobs on channels 9–16. Any distinct ordinary 7-bit CC can be learned; no particular CC numbers are required. Each control must send a different CC or MIDI channel. Learning the same message again moves its assignment instead of making two channels follow it.
+For the nanoKONTROL2, open a piece with at least 16 channels. Learn its eight physical faders on mixer channels 1–8, then its eight knobs on channels 9–16. Any distinct ordinary 7-bit CC can be learned; no particular CC numbers are required. Each control must send a different CC or MIDI channel. Learning the same device/channel/CC again moves its assignment, including between volume and action controls.
 
-**Control bank** selects channels 1–16, 17–32 or 33–48, with the final range shortened to the number of loaded channels. The same 16 hardware controls follow the selected bank. In a short final bank, controls without a matching channel do nothing. Learn mappings belong to these positions, not to particular instrument names, so they work across pieces. **Cancel learn** stops a pending assignment; **Clear mappings** removes all saved assignments.
+**Control bank** selects channels 1–16, 17–32 or 33–48, with the final range shortened to the number of loaded channels. The same 16 hardware controls follow the selected bank. In a short final bank, controls without a matching channel do nothing. Learn mappings belong to these positions, not to particular instrument names, so they work across pieces. **Cancel learn** stops a pending assignment; **Clear mappings** removes all saved volume and action assignments.
 
 Mappings saved by the earlier eight-control version remain in positions 1–8. Positions 9–16 start empty; learn the knobs once to fill them. Bank boundaries are now 16 channels apart, so the former channels 9–16 are controlled by those added positions in the first bank.
 
-Mappings are stored locally in the browser, separately from `.orchmix.json` sessions. On later visits, the app attempts automatic connection only when MIDI permission is already granted; otherwise use **Connect MIDI**. Device or browser permission changes can still require reconnecting or learning again. MIDI moves only the faders: turning a muted channel's fader does not unmute it. Actual hardware behavior should be checked with your controller before using it with participants.
+The **MIDI controller** panel also has a separate **Learn** button for each action:
+
+| Action | Each nonzero CC message does this |
+| --- | --- |
+| **Play / pause** | Starts playback, pauses while playing, or resumes from the paused position. |
+| **All off / restore** | Silences all parts, then restores the previous mute/solo selection on the next press. If all parts are muted without a saved selection, it enables them all. Fader levels stay unchanged. |
+| **Random instrument** | Enables one randomly chosen part that is currently off, preserving the other audible parts and all fader levels. It does nothing if all parts are already on, and never reveals the piece title. |
+
+These three mappings work independently of **Control bank** and do not occupy volume slots. Click an action's **Learn** button, then press the hardware button to assign it; that learning press does not perform the action. Configure hardware buttons as momentary: 127 on press, 0 on release. Any nonzero value (1–127) triggers once per received message; zero is ignored. A button configured to alternate 127 and 0 on successive presses would therefore act only on every other press. Existing volume mappings are preserved when adding these actions, unless you deliberately assign the same device/channel/CC to a new control.
+
+Mappings are stored locally in the browser, separately from `.orchmix.json` sessions. On later visits, the app attempts automatic connection only when MIDI permission is already granted; otherwise use **Connect MIDI**. Device or browser permission changes can still require reconnecting or learning again. Turning a muted channel's volume control does not unmute it. Actual hardware behavior should be checked with your controller before using it with participants.
 
 ## Optional local server
 
