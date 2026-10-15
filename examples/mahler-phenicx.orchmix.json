@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "title": "Mahler · Symphony No. 1, IV — PHENICX-Anechoic",
+  "title": "Mahler · Symphony No. 1, IV — PHENICX-Anechoic — estimated seating",
   "excerpt": {
     "start": 0,
     "duration": 30
@@ -18,8 +18,8 @@
         "weight": 1
       },
       "instrument": "violin",
-      "players": 1,
-      "playersBasis": "confirmed"
+      "players": 8,
+      "playersBasis": "estimate"
     },
     {
       "id": "violin2",
@@ -33,8 +33,8 @@
         "weight": 1
       },
       "instrument": "violin",
-      "players": 1,
-      "playersBasis": "confirmed"
+      "players": 8,
+      "playersBasis": "estimate"
     },
     {
       "id": "violin3",
@@ -48,8 +48,8 @@
         "weight": 1
       },
       "instrument": "violin",
-      "players": 1,
-      "playersBasis": "confirmed"
+      "players": 8,
+      "playersBasis": "estimate"
     },
     {
       "id": "violin4",
@@ -63,8 +63,8 @@
         "weight": 1
       },
       "instrument": "violin",
-      "players": 1,
-      "playersBasis": "confirmed"
+      "players": 8,
+      "playersBasis": "estimate"
     },
     {
       "id": "viola",
@@ -78,8 +78,8 @@
         "weight": 1
       },
       "instrument": "viola",
-      "players": 1,
-      "playersBasis": "confirmed"
+      "players": 12,
+      "playersBasis": "estimate"
     },
     {
       "id": "cello",
@@ -93,8 +93,8 @@
         "weight": 1
       },
       "instrument": "cello",
-      "players": 1,
-      "playersBasis": "confirmed"
+      "players": 10,
+      "playersBasis": "estimate"
     },
     {
       "id": "doublebass",
@@ -108,8 +108,8 @@
         "weight": 1
       },
       "instrument": "bass",
-      "players": 1,
-      "playersBasis": "confirmed"
+      "players": 8,
+      "playersBasis": "estimate"
     },
     {
       "id": "flute",
