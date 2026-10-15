@@ -1,0 +1,460 @@
+{
+  "version": 1,
+  "title": "Mahler · Symphony No. 1, IV — PHENICX-Anechoic",
+  "excerpt": {
+    "start": 0,
+    "duration": 30
+  },
+  "tracks": [
+    {
+      "id": "violin1",
+      "name": "Violin 1",
+      "family": "strings",
+      "file": "violin1.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 1,
+        "weight": 1
+      },
+      "instrument": "violin",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "violin2",
+      "name": "Violin 2",
+      "family": "strings",
+      "file": "violin2.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 2,
+        "weight": 1
+      },
+      "instrument": "violin",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "violin3",
+      "name": "Violin 3",
+      "family": "strings",
+      "file": "violin3.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 3,
+        "weight": 1
+      },
+      "instrument": "violin",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "violin4",
+      "name": "Violin 4",
+      "family": "strings",
+      "file": "violin4.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 4,
+        "weight": 1
+      },
+      "instrument": "violin",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "viola",
+      "name": "Viola",
+      "family": "strings",
+      "file": "viola.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 100,
+        "weight": 1
+      },
+      "instrument": "viola",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "cello",
+      "name": "Cello",
+      "family": "strings",
+      "file": "cello.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 200,
+        "weight": 1
+      },
+      "instrument": "cello",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "doublebass",
+      "name": "Double bass",
+      "family": "strings",
+      "file": "doublebass.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 300,
+        "weight": 1
+      },
+      "instrument": "bass",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "flute",
+      "name": "Flute",
+      "family": "woodwinds",
+      "file": "flute.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 0,
+        "weight": 1
+      },
+      "instrument": "flute",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "oboe1",
+      "name": "Oboe 1",
+      "family": "woodwinds",
+      "file": "oboe1.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 101,
+        "weight": 1
+      },
+      "instrument": "oboe",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "oboe2",
+      "name": "Oboe 2",
+      "family": "woodwinds",
+      "file": "oboe2.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 102,
+        "weight": 1
+      },
+      "instrument": "oboe",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "oboe3",
+      "name": "Oboe 3",
+      "family": "woodwinds",
+      "file": "oboe3.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 103,
+        "weight": 1
+      },
+      "instrument": "oboe",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "oboe4",
+      "name": "Oboe 4",
+      "family": "woodwinds",
+      "file": "oboe4.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 104,
+        "weight": 1
+      },
+      "instrument": "oboe",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "clarinet1",
+      "name": "Clarinet 1",
+      "family": "woodwinds",
+      "file": "clarinet1.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 201,
+        "weight": 1
+      },
+      "instrument": "clarinet",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "clarinet2",
+      "name": "Clarinet 2",
+      "family": "woodwinds",
+      "file": "clarinet2.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 202,
+        "weight": 1
+      },
+      "instrument": "clarinet",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "clarinet3",
+      "name": "Clarinet 3",
+      "family": "woodwinds",
+      "file": "clarinet3.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 203,
+        "weight": 1
+      },
+      "instrument": "clarinet",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "clarinet4",
+      "name": "Clarinet 4",
+      "family": "woodwinds",
+      "file": "clarinet4.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 204,
+        "weight": 1
+      },
+      "instrument": "clarinet",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "bassoon1",
+      "name": "Bassoon 1",
+      "family": "woodwinds",
+      "file": "bassoon1.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 301,
+        "weight": 1
+      },
+      "instrument": "bassoon",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "bassoon2",
+      "name": "Bassoon 2",
+      "family": "woodwinds",
+      "file": "bassoon2.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 302,
+        "weight": 1
+      },
+      "instrument": "bassoon",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "bassoon3",
+      "name": "Bassoon 3",
+      "family": "woodwinds",
+      "file": "bassoon3.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 303,
+        "weight": 1
+      },
+      "instrument": "bassoon",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "horn1",
+      "name": "Horn 1",
+      "family": "brass",
+      "file": "horn1.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "back",
+        "order": 1,
+        "weight": 1
+      },
+      "instrument": "horn",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "horn2",
+      "name": "Horn 2",
+      "family": "brass",
+      "file": "horn2.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "back",
+        "order": 2,
+        "weight": 1
+      },
+      "instrument": "horn",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "horn3",
+      "name": "Horn 3",
+      "family": "brass",
+      "file": "horn3.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "back",
+        "order": 3,
+        "weight": 1
+      },
+      "instrument": "horn",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "horn4",
+      "name": "Horn 4",
+      "family": "brass",
+      "file": "horn4.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "back",
+        "order": 4,
+        "weight": 1
+      },
+      "instrument": "horn",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "horn5",
+      "name": "Horn 5",
+      "family": "brass",
+      "file": "horn5.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "back",
+        "order": 5,
+        "weight": 1
+      },
+      "instrument": "horn",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "horn6",
+      "name": "Horn 6",
+      "family": "brass",
+      "file": "horn6.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "back",
+        "order": 6,
+        "weight": 1
+      },
+      "instrument": "horn",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "horn7",
+      "name": "Horn 7",
+      "family": "brass",
+      "file": "horn7.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "back",
+        "order": 7,
+        "weight": 1
+      },
+      "instrument": "horn",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "trumpet1",
+      "name": "Trumpet 1",
+      "family": "brass",
+      "file": "trumpet1.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "back",
+        "order": 101,
+        "weight": 1
+      },
+      "instrument": "trumpet",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "trumpet2",
+      "name": "Trumpet 2",
+      "family": "brass",
+      "file": "trumpet2.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "back",
+        "order": 102,
+        "weight": 1
+      },
+      "instrument": "trumpet",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "trumpet3",
+      "name": "Trumpet 3",
+      "family": "brass",
+      "file": "trumpet3.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "back",
+        "order": 103,
+        "weight": 1
+      },
+      "instrument": "trumpet",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "trumpet4",
+      "name": "Trumpet 4",
+      "family": "brass",
+      "file": "trumpet4.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "back",
+        "order": 104,
+        "weight": 1
+      },
+      "instrument": "trumpet",
+      "players": 1,
+      "playersBasis": "confirmed"
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "title": "Mozart · Don Giovanni, Donna Elvira aria — PHENICX-Anechoic (instrumental)",
+  "excerpt": {
+    "start": 0,
+    "duration": 30
+  },
+  "tracks": [
+    {
+      "id": "violin1",
+      "name": "Violin 1",
+      "family": "strings",
+      "file": "violin1.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 1,
+        "weight": 1
+      },
+      "instrument": "violin",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "violin2",
+      "name": "Violin 2",
+      "family": "strings",
+      "file": "violin2.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 2,
+        "weight": 1
+      },
+      "instrument": "violin",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "viola",
+      "name": "Viola",
+      "family": "strings",
+      "file": "viola.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 100,
+        "weight": 1
+      },
+      "instrument": "viola",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "cello",
+      "name": "Cello",
+      "family": "strings",
+      "file": "cello.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 200,
+        "weight": 1
+      },
+      "instrument": "cello",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "doublebass",
+      "name": "Double bass",
+      "family": "strings",
+      "file": "doublebass.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "front",
+        "order": 300,
+        "weight": 1
+      },
+      "instrument": "bass",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "flute",
+      "name": "Flute",
+      "family": "woodwinds",
+      "file": "flute.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 0,
+        "weight": 1
+      },
+      "instrument": "flute",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "clarinet",
+      "name": "Clarinet",
+      "family": "woodwinds",
+      "file": "clarinet.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 200,
+        "weight": 1
+      },
+      "instrument": "clarinet",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "bassoon",
+      "name": "Bassoon",
+      "family": "woodwinds",
+      "file": "bassoon.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "middle",
+        "order": 300,
+        "weight": 1
+      },
+      "instrument": "bassoon",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "horn1",
+      "name": "Horn 1",
+      "family": "brass",
+      "file": "horn1.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "back",
+        "order": 1,
+        "weight": 1
+      },
+      "instrument": "horn",
+      "players": 1,
+      "playersBasis": "confirmed"
+    },
+    {
+      "id": "horn2",
+      "name": "Horn 2",
+      "family": "brass",
+      "file": "horn2.wav",
+      "referenceDb": 0,
+      "seat": {
+        "row": "back",
+        "order": 2,
+        "weight": 1
+      },
+      "instrument": "horn",
+      "players": 1,
+      "playersBasis": "confirmed"
+    }
+  ]
+}

@@ -50,7 +50,8 @@ Connect the Korg nanoKONTROL2, open **MIDI controller**, choose **Connect MIDI**
 - **Operation Beethoven:** twelve real orchestral section tracks, available separately as WAV or MP3. A useful first source under CC BY 4.0. Use the [ready-to-load WAV session](examples/beethoven-operation.orchmix.json) and [confirmed player-count notes](docs/BEETHOVEN-OPERATION.md).
 - **The Spheres:** Mozart’s Symphony No. 40 and Tchaikovsky’s *Romeo and Juliet*. Choose the **StereoMix** archive containing individual stereo stems. Ready-to-load WAV sessions: [Mozart · 14 stems](examples/mozart-spheres.orchmix.json) ([seating notes](docs/MOZART-SPHERES.md)) and [Tchaikovsky · 33 stems](examples/tchaikovsky-spheres.orchmix.json) ([seating notes](docs/TCHAIKOVSKY-SPHERES.md)).
 - **SynthSOD / URMP:** further orchestral renderings and smaller recorded ensembles.
-- **PHENICX, ECHO and OrchPlay:** interesting additional materials, with their own usage restrictions. Local playback does not grant rights to every teaching, export or recording activity.
+- **PHENICX-Anechoic:** ready-to-load sessions for [Beethoven · 20 stems](examples/beethoven-phenicx.orchmix.json), [Bruckner · 34 stems](examples/bruckner-phenicx.orchmix.json), [Mahler · 30 stems](examples/mahler-phenicx.orchmix.json) and [Mozart · 10 stems](examples/mozart-phenicx.orchmix.json). See the [recording and player-count notes](docs/PHENICX-ANECHOIC.md), including five Bruckner files absent from the supplied folder listing.
+- **ECHO and OrchPlay:** interesting additional materials, with their own usage restrictions. Local playback does not grant rights to every teaching, export or recording activity.
 
 An optional downloader saves Beethoven’s twelve tracks to an ignored local folder. It only runs when you explicitly execute it:
 
