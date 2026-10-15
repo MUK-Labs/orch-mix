@@ -43,7 +43,7 @@ The *pp–ff* marks are an intuitive playback scale, not an acoustic simulation 
 
 ## Use a MIDI controller
 
-Connect the Korg nanoKONTROL2, open **MIDI controller**, choose **Connect MIDI**, then select **Learn** on a mixer channel and move the physical fader you want to assign. Eight controller slots follow the selected channel bank, so the same eight hardware faders can reach a larger orchestra. Mappings are remembered in this browser. On reopening, the app reconnects automatically only when MIDI permission has already been granted; otherwise choose **Connect MIDI** again. MIDI changes fader levels and leaves mute choices intact. See [the MIDI instructions](docs/LOCAL-USE.md#control-the-faders-with-midi).
+Connect the Korg nanoKONTROL2, open **MIDI controller**, choose **Connect MIDI**, then select **Learn** on a mixer channel and move the physical fader or knob you want to assign. **Sixteen controls work at once:** for example, learn the eight faders on channels 1–8 and the eight knobs on channels 9–16. **Control bank** switches the same mappings to channels 17–32, then 33–48 as needed. Existing eight-control mappings remain in slots 1–8; learn the knobs once to add slots 9–16. Mappings are remembered in this browser. On reopening, the app reconnects automatically only when MIDI permission has already been granted; otherwise choose **Connect MIDI** again. MIDI changes fader levels and leaves mute choices intact. See [the MIDI instructions](docs/LOCAL-USE.md#control-the-faders-with-midi).
 
 ## Get recordings
 

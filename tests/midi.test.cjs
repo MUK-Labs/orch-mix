@@ -46,22 +46,62 @@ test('learns one input-only CC per slot without moving audio during learning, an
   f.port.message([0xb2, 4, 0]);
   f.port.message([0xb2, 4, 127]);
   assert.deepEqual(f.received, [{ slot: 0, value: 0 }, { slot: 0, value: 127 }]);
-  midi.learn(7); f.port.message([0xb2, 4, 60]);
+  midi.learn(15); f.port.message([0xb2, 4, 60]);
   assert.equal(midi.state.mappings[0], null);
-  assert.equal(midi.state.mappings[7].controller, 4);
-  midi.clear(7);
-  assert.equal(midi.state.mappings[7], null);
-  assert.throws(() => midi.learn(8), RangeError);
+  assert.equal(midi.state.mappings[15].controller, 4);
+  f.port.message([0xb2, 4, 81]);
+  assert.deepEqual(f.received.at(-1), { slot: 15, value: 81 });
+  assert.equal(f.received.length, 3);
+  midi.clear(15);
+  assert.equal(midi.state.mappings[15], null);
+  assert.throws(() => midi.learn(16), /between 0 and 15/);
+  assert.throws(() => midi.clear(16), /between 0 and 15/);
+});
+
+test('learns and independently routes all 16 faders and knobs', async () => {
+  const f = fixture(), midi = new OrchMidi(f.options);
+  await midi.ready; await midi.connect();
+  assert.equal(OrchMidi.SLOT_COUNT, 16);
+  // Distinct ordinary CCs, as sent by eight faders and eight absolute knobs.
+  const controllers = [0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23];
+  controllers.forEach((controller, slot) => {
+    midi.learn(slot); f.port.message([0xb0, controller, 64]);
+  });
+  assert.equal(midi.state.mappings.length, 16);
+  assert.deepEqual(midi.state.mappings.map(mapping => mapping.controller), controllers);
+  assert.deepEqual(f.received, []);
+  controllers.forEach((controller, slot) => f.port.message([0xb0, controller, slot * 8]));
+  assert.deepEqual(f.received, controllers.map((_, slot) => ({ slot, value: slot * 8 })));
+});
+
+test('restores legacy eight-slot preferences and pads new controls without changing learned CCs', async () => {
+  const mappings = Array.from({ length: 8 }, (_, index) => index === 3 ? null : {
+    portId: 'port-1', name: 'nanoKONTROL2', manufacturer: 'KORG', channel: 2, controller: index
+  });
+  const f = fixture({ version: 1, enabled: false, mappings });
+  const midi = new OrchMidi(f.options);
+  await midi.ready;
+  assert.equal(f.calls.length, 0);
+  assert.deepEqual(midi.state.mappings, [...mappings, ...Array(8).fill(null)]);
+  await midi.connect();
+  midi.learn(15); f.port.message([0xb2, 23, 64]);
+  const saved = JSON.parse(f.values.get(OrchMidi.STORAGE_KEY));
+  assert.equal(OrchMidi.STORAGE_KEY, 'orchmix.midi.v1');
+  assert.equal(saved.version, 1);
+  assert.equal(saved.mappings.length, 16);
+  assert.deepEqual(saved.mappings.slice(0, 8), mappings);
+  assert.deepEqual(saved.mappings.slice(8, 15), Array(7).fill(null));
+  assert.equal(saved.mappings[15].controller, 23);
 });
 
 test('persists learned controls and restores only already granted permission', async () => {
   const f = fixture(), original = new OrchMidi(f.options);
   await original.ready; await original.connect();
-  original.learn(3); f.port.message([0xb0, 12, 90]);
+  original.learn(15); f.port.message([0xb0, 12, 90]);
   const restored = new OrchMidi(f.options);
   assert.equal(await restored.ready, true);
   assert.equal(f.calls.length, 2);
-  assert.equal(restored.state.mappings[3].controller, 12);
+  assert.equal(restored.state.mappings[15].controller, 12);
   assert.equal(restored.state.connected, true);
   f.navigator.permissions.query = async () => ({ state: 'prompt' });
   const needsPrompt = new OrchMidi(f.options);

@@ -1,6 +1,7 @@
 (function () {
   'use strict';
   const M = window.OrchModel;
+  const MIDI_SLOTS = window.OrchMidi.SLOT_COUNT;
   const $ = id => document.getElementById(id);
   const engine = new window.OrchAudioEngine();
   const library = new window.OrchLibrary();
@@ -157,7 +158,7 @@
       const value = document.createElement('p'); value.className = 'instrument-value';
       const bar = document.createElement('div'); bar.className = 'energy-bar'; bar.setAttribute('aria-hidden', 'true'); bar.append(document.createElement('i'));
       const learn = document.createElement('button'); learn.className = 'midi-learn'; learn.setAttribute('aria-label', 'MIDI learn ' + t.name);
-      learn.addEventListener('click', () => { const index = Array.from(state.cards.keys()).indexOf(t.id); state.midiBank = Math.floor(index / 8); midi?.learn(index % 8); renderMidi(); });
+      learn.addEventListener('click', () => { const index = Array.from(state.cards.keys()).indexOf(t.id); state.midiBank = Math.floor(index / MIDI_SLOTS); midi?.learn(index % MIDI_SLOTS); renderMidi(); });
       el.append(channel, label, controls, value, bar, learn); $('instrument-cards').append(el); state.cards.set(t.id, { element: el, wheel, value, solo, mute, learn });
     }
     $('stage-hint').textContent = 'Click a section to turn it on / off · fader levels stay unchanged';
@@ -502,22 +503,22 @@
     if (!midi) return;
     const info = midi.state;
     const count = state.cards.size;
-    state.midiBank = clamp(state.midiBank, 0, Math.max(0, Math.ceil(count / 8) - 1));
+    state.midiBank = clamp(state.midiBank, 0, Math.max(0, Math.ceil(count / MIDI_SLOTS) - 1));
     const bank = $('midi-bank'); bank.replaceChildren();
-    for (let i = 0; i < Math.ceil(count / 8); i++) bank.append(new Option((i * 8 + 1) + '–' + Math.min(count, i * 8 + 8), String(i)));
+    for (let i = 0; i < Math.ceil(count / MIDI_SLOTS); i++) bank.append(new Option((i * MIDI_SLOTS + 1) + '–' + Math.min(count, (i + 1) * MIDI_SLOTS), String(i)));
     bank.value = String(state.midiBank); bank.disabled = state.loading;
     $('midi-connect').disabled = !info.supported || info.connecting || info.connected;
     $('midi-connect').textContent = info.connecting ? 'Connecting…' : info.connected ? 'MIDI connected' : 'Connect MIDI';
     $('midi-cancel').hidden = info.learning === null;
     $('midi-clear').disabled = !info.mappings.some(Boolean);
-    $('midi-status').textContent = info.error || (!info.supported ? 'Web MIDI needs a supported browser such as Chrome or Edge on a secure local address.' : info.learning !== null ? 'Move hardware fader ' + (info.learning + 1) + ' to learn it…' : info.connected ? info.inputs.length ? info.inputs.map(input => input.name).join(', ') : 'MIDI enabled. Plug in your controller.' : 'Connect your controller, then learn a fader below.') + (info.storageAvailable ? '' : ' Mappings cannot be saved in this browser session.');
+    $('midi-status').textContent = info.error || (!info.supported ? 'Web MIDI needs a supported browser such as Chrome or Edge on a secure local address.' : info.learning !== null ? 'Move a fader or knob to learn control ' + (info.learning + 1) + '…' : info.connected ? info.inputs.length ? info.inputs.map(input => input.name).join(', ') : 'MIDI enabled. Plug in your controller.' : 'Connect your controller, then learn a fader or knob below.') + (info.storageAvailable ? '' : ' Mappings cannot be saved in this browser session.');
     for (const [index, ui] of Array.from(state.cards.values()).entries()) {
-      const slot = index % 8, active = Math.floor(index / 8) === state.midiBank;
+      const slot = index % MIDI_SLOTS, active = Math.floor(index / MIDI_SLOTS) === state.midiBank;
       const map = info.mappings[slot];
       ui.learn.hidden = $('midi-panel').hidden;
       ui.learn.disabled = !info.connected || state.loading;
-      ui.learn.textContent = active && info.learning === slot ? 'Move fader…' : active && map ? 'CC ' + map.controller + ' · relearn' : active ? 'Learn ' + (slot + 1) : 'Bank ' + (Math.floor(index / 8) + 1) + ' · learn';
-      ui.learn.title = map ? 'Hardware slot ' + (slot + 1) + ', MIDI channel ' + (map.channel + 1) + ', CC ' + map.controller : 'Map hardware fader ' + (slot + 1) + ' to this position in the bank';
+      ui.learn.textContent = active && info.learning === slot ? 'Move control…' : active && map ? 'CC ' + map.controller + ' · relearn' : active ? 'Learn ' + (slot + 1) : 'Bank ' + (Math.floor(index / MIDI_SLOTS) + 1) + ' · learn';
+      ui.learn.title = map ? 'Hardware control ' + (slot + 1) + ', MIDI channel ' + (map.channel + 1) + ', CC ' + map.controller : 'Map a hardware fader or knob to control ' + (slot + 1) + ' in the bank';
       ui.element.classList.toggle('midi-active', active && info.connected && !$('midi-panel').hidden);
     }
   }
@@ -581,7 +582,7 @@
   }
   midi = new window.OrchMidi({ onChange: renderMidi, onValue: ({ slot, value }) => {
     if (!state.loaded || state.loading || state.referenceListening) return;
-    const [id, ui] = Array.from(state.cards.entries())[state.midiBank * 8 + slot] || [];
+    const [id, ui] = Array.from(state.cards.entries())[state.midiBank * MIDI_SLOTS + slot] || [];
     if (!ui) return;
     const min = Number(ui.wheel.min), max = Number(ui.wheel.max), step = Number(ui.wheel.step);
     state.controls[id] = Math.round((min + value / 127 * (max - min)) / step) * step;

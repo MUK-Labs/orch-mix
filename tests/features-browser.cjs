@@ -40,7 +40,7 @@ function installBrowserFixtures() {
     for (let i = 0; i < frames; i++) view.setInt16(44 + i * 2, Math.round(2000 * Math.sin(i * (220 + index * 17) * Math.PI * 2 / rate)), true);
     return new File([buffer], name, { type: 'audio/wav' });
   }
-  function folder(name, title, seconds, broken = false) {
+  function folder(name, title, seconds, broken = false, pieceTracks = tracks) {
     return {
       name, kind: 'directory',
       async queryPermission() { return test.permissions[name] || 'granted'; },
@@ -50,9 +50,9 @@ function installBrowserFixtures() {
         if (test.permissions[name] === 'denied') throw new DOMException('Denied', 'NotAllowedError');
         if (test.missing === name) throw new DOMException('Moved', 'NotFoundError');
         test.reads.push(name);
-        const manifest = { version: 1, title, excerpt: { start: 0, duration: 5 }, tracks };
+        const manifest = { version: 1, title, excerpt: { start: 0, duration: 5 }, tracks: pieceTracks };
         yield ['piece.orchmix.json', { kind: 'file', getFile: async () => new File([broken ? '{bad JSON' : JSON.stringify(manifest)], 'piece.orchmix.json', { type: 'application/json' }) }];
-        for (const [index, track] of tracks.entries()) {
+        for (const [index, track] of pieceTracks.entries()) {
           // One shorter track makes random-start selection use common duration.
           yield [track.file, { kind: 'file', getFile: async () => wav(track.file, seconds - (index === 11 ? 2 : 0), index) }];
         }
@@ -62,6 +62,12 @@ function installBrowserFixtures() {
   test.folders['first-piece'] = folder('first-piece', test.titles[0], 32);
   test.folders['second-piece'] = folder('second-piece', test.titles[1], 48);
   test.folders['broken-piece'] = folder('broken-piece', 'Never reveal this broken title', 32, true);
+  test.folders['many-parts'] = folder('many-parts', 'Twenty-part MIDI fixture', 12, false,
+    Array.from({ length: 20 }, (_, index) => ({
+      id: 'part-' + (index + 1), name: 'Part ' + (index + 1), family: 'strings',
+      file: 'part-' + (index + 1) + '.wav', referenceDb: -3,
+      seat: { row: 'front', order: index, weight: 1 }
+    })));
   Object.defineProperty(window, 'showDirectoryPicker', { configurable: true, value: async () => test.folders[test.pick] });
   const storageKey = 'orchmix.test.library-handles';
   function readRecords() {
@@ -167,8 +173,11 @@ async function allMuted(page) {
     await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 0, 127]));
     assert.equal(await firstStrip.locator('.wheel').inputValue(), '12');
     assert.equal(await allMuted(page), true, 'Hardware gain changes must preserve mute');
-    await page.locator('#midi-bank').selectOption('1');
-    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 0, 0]));
+    assert.deepEqual(await page.locator('#midi-bank option').allTextContents(), ['1–12']);
+    await ninthStrip.locator('.midi-learn').click();
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 16, 64]));
+    assert.equal(await ninthStrip.locator('.wheel').inputValue(), levels[8]);
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 16, 0]));
     assert.equal(await ninthStrip.locator('.wheel').inputValue(), '-48');
     assert.equal(await firstStrip.locator('.wheel').inputValue(), '12');
     assert.equal(await allMuted(page), true);
@@ -183,6 +192,8 @@ async function allMuted(page) {
     await openSaved(page, /first-piece|First Secret/);
     await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 0, 127]));
     assert.equal(await page.locator('.instrument').first().locator('.wheel').inputValue(), '12', 'Mapping resumes after reload without relearning');
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 16, 0]));
+    assert.equal(await page.locator('.instrument').nth(8).locator('.wheel').inputValue(), '-48', 'Knob mapping resumes after reload without relearning');
 
     await page.locator('#random-duration').fill('5');
     await page.evaluate(() => { Math.random = () => .999; window.__orchTest.loads.length = 0; window.__orchTest.plays.length = 0; });
@@ -262,9 +273,47 @@ async function allMuted(page) {
     assert.equal(await page.locator('#reveal-piece').isVisible(), true);
     assert.equal(await page.locator('#play-button').isEnabled(), true);
     assert.equal(await page.locator('#library-button').isDisabled(), true);
+
+    // Exercise both halves of a 16-control bank and a short final bank.
+    await page.locator('#reveal-piece').click();
+    await page.evaluate(() => { window.__orchTest.permissions = {}; window.__orchTest.pick = 'many-parts'; });
+    await page.locator('#remember-folder').click();
+    await page.waitForFunction(() => [...document.querySelector('#saved-pieces').options].some(option => /many-parts|Twenty-part/.test(option.textContent)));
+    await openSaved(page, /many-parts|Twenty-part/);
+    assert.equal(await page.locator('.instrument').count(), 20);
+    assert.deepEqual(await page.locator('#midi-bank option').allTextContents(), ['1–16', '17–20']);
+    const control16 = page.locator('.instrument').nth(15);
+    await control16.locator('.midi-learn').click();
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 23, 64]));
+    assert.equal(await control16.locator('.wheel').inputValue(), '-3', 'Learning the last knob leaves its gain unchanged');
+    await page.evaluate(() => {
+      window.__orchTest.sendMidi([0xb0, 0, 127]);
+      window.__orchTest.sendMidi([0xb0, 16, 0]);
+      window.__orchTest.sendMidi([0xb0, 23, 127]);
+    });
+    assert.equal(await page.locator('.instrument').nth(0).locator('.wheel').inputValue(), '12');
+    assert.equal(await page.locator('.instrument').nth(8).locator('.wheel').inputValue(), '-48');
+    assert.equal(await control16.locator('.wheel').inputValue(), '12');
+    await page.locator('#all-off').click();
+    await page.locator('#midi-bank').selectOption('1');
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 0, 0]));
+    assert.equal(await page.locator('.instrument').nth(16).locator('.wheel').inputValue(), '-48', 'Control 1 reaches channel 17 in bank 2');
+    const secondBankLevels = await page.locator('.wheel').evaluateAll(inputs => inputs.map(input => input.value));
+    await page.evaluate(() => {
+      window.__orchTest.sendMidi([0xb0, 16, 127]);
+      window.__orchTest.sendMidi([0xb0, 23, 0]);
+    });
+    assert.deepEqual(await page.locator('.wheel').evaluateAll(inputs => inputs.map(input => input.value)), secondBankLevels, 'Unoccupied control positions do nothing in the last bank');
+    assert.equal(await allMuted(page), true);
+    await page.screenshot({ path: path.join(temp, 'midi-16-controls.png'), fullPage: true });
+    await page.reload();
+    await page.waitForFunction(() => window.__orchTest.midiRequests.length === 1);
+    await openSaved(page, /many-parts|Twenty-part/);
+    await page.evaluate(() => window.__orchTest.sendMidi([0xb0, 23, 0]));
+    assert.equal(await page.locator('.instrument').nth(15).locator('.wheel').inputValue(), '-48', 'Control 16 survives reloading the app');
     assert.deepEqual(remote, []);
     assert.deepEqual(errors, []);
-    console.log('PASS: remembered folders and titles survive reload; real local WAV load; common-duration random start; concealed answer; first playback fully muted; polygon/keyboard toggles preserve levels; answer reveal preserves mute; 25 musician symbols; mocked MIDI learn, bank switching and automatic restoration; permission/moved-folder/invalid-session recovery; responsive width; no external requests.');
+    console.log('PASS: remembered folders and titles survive reload; real local WAV load; common-duration random start; concealed answer; first playback fully muted; polygon/keyboard toggles preserve levels; answer reveal preserves mute; 25 musician symbols; 16-control MIDI learn, independent faders/knobs, bank switching, short final bank and automatic restoration; permission/moved-folder/invalid-session recovery; responsive width; no external requests.');
     console.log('Feature screenshots: ' + temp);
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

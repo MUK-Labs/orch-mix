@@ -7,7 +7,7 @@
   'use strict';
 
   const STORAGE_KEY = 'orchmix.midi.v1';
-  const SLOT_COUNT = 8;
+  const SLOT_COUNT = 16;
   const noop = function () {};
   const text = value => typeof value === 'string' ? value.slice(0, 300) : '';
   const validSlot = value => Number.isInteger(value) && value >= 0 && value < SLOT_COUNT;
@@ -186,7 +186,7 @@
       if (!this._access || !this._ports.has(port) || !data || data.length !== 3) return;
       const [status, controller, value] = data;
       // Learn ordinary 7-bit CC only. Notes, clock, pitch bend, system messages,
-      // and CC120–127 channel-mode commands cannot accidentally become faders.
+      // and CC120–127 channel-mode commands cannot accidentally become controls.
       if (!Number.isInteger(status) || status < 0xb0 || status > 0xbf ||
         !Number.isInteger(controller) || controller < 0 || controller > 119 ||
         !Number.isInteger(value) || value < 0 || value > 127) return;
@@ -210,9 +210,9 @@
     }
 
     learn(slot) {
-      if (!validSlot(slot)) throw new RangeError('A MIDI fader slot must be between 0 and 7.');
+      if (!validSlot(slot)) throw new RangeError(`A MIDI control slot must be between 0 and ${SLOT_COUNT - 1}.`);
       if (!this._access) {
-        this._error = 'Connect MIDI before learning a fader.';
+        this._error = 'Connect MIDI before learning a fader or knob.';
         this._emit();
         return false;
       }
@@ -228,7 +228,7 @@
     }
 
     clear(slot) {
-      if (slot !== undefined && !validSlot(slot)) throw new RangeError('A MIDI fader slot must be between 0 and 7.');
+      if (slot !== undefined && !validSlot(slot)) throw new RangeError(`A MIDI control slot must be between 0 and ${SLOT_COUNT - 1}.`);
       if (slot === undefined) this._mappings = Array(SLOT_COUNT).fill(null);
       else this._mappings[slot] = null;
       this._learning = null;

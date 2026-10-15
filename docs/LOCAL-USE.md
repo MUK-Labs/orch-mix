@@ -45,7 +45,13 @@ For a smooth classroom session, open each library entry once before the exercise
 
 Use Chrome or Edge at the stable local address above, connect the nanoKONTROL2, open **MIDI controller**, then choose **Connect MIDI** and allow MIDI input when prompted. The app requests ordinary MIDI input, not system-exclusive access, and sends no MIDI output.
 
-Select **Learn** for a mixer channel and move the physical fader to assign its MIDI Control Change message. The learning movement establishes the mapping without changing the audio level; subsequent movements control the fader. Repeat for the other faders. The app uses eight controller slots; **Fader bank** selects which set of eight mixer channels they control. Learn mappings are tied to these slots, not to a particular piece's instrument names, so the controller can be reused with a different orchestration. Selecting another bank makes the same eight faders control the next group of channels. **Cancel learn** stops a pending assignment; **Clear mappings** removes the saved assignments.
+Select **Learn** for a mixer channel and move a physical fader or knob to assign its MIDI Control Change message. The learning movement establishes the mapping without changing the audio level; subsequent movements control that channel's volume. The app accepts up to **16 independently learned controls** at once.
+
+For the nanoKONTROL2, open a piece with at least 16 channels. Learn its eight physical faders on mixer channels 1–8, then its eight knobs on channels 9–16. Any distinct ordinary 7-bit CC can be learned; no particular CC numbers are required. Each control must send a different CC or MIDI channel. Learning the same message again moves its assignment instead of making two channels follow it.
+
+**Control bank** selects channels 1–16, 17–32 or 33–48, with the final range shortened to the number of loaded channels. The same 16 hardware controls follow the selected bank. In a short final bank, controls without a matching channel do nothing. Learn mappings belong to these positions, not to particular instrument names, so they work across pieces. **Cancel learn** stops a pending assignment; **Clear mappings** removes all saved assignments.
+
+Mappings saved by the earlier eight-control version remain in positions 1–8. Positions 9–16 start empty; learn the knobs once to fill them. Bank boundaries are now 16 channels apart, so the former channels 9–16 are controlled by those added positions in the first bank.
 
 Mappings are stored locally in the browser, separately from `.orchmix.json` sessions. On later visits, the app attempts automatic connection only when MIDI permission is already granted; otherwise use **Connect MIDI**. Device or browser permission changes can still require reconnecting or learning again. MIDI moves only the faders: turning a muted channel's fader does not unmute it. Actual hardware behavior should be checked with your controller before using it with participants.
 
