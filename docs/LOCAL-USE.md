@@ -5,9 +5,11 @@ Orch Mix is an offline browser instrument for Adrián Artacho's orchestration te
 ## Open it
 
 1. Clone or download this repository onto your computer.
-2. On macOS, open `Start.command`; on Windows, open `start.bat`. You can always open `index.html` directly in a modern desktop browser. If macOS does not execute the launcher, opening `index.html` needs no command-line setup.
+2. On macOS, double-click `Start.command` with Python 3.9 or newer installed. It runs the local server at `http://127.0.0.1:8765/` and opens Chrome, Edge if Chrome is unavailable, or your default browser as a fallback. Leave its Terminal window open; stop the server with Ctrl+C. A second launch reopens the running server. On Windows, `start.bat` opens the file directly; use the [local server](#optional-local-server) for a stable address.
 3. Try the built-in synthesized demonstration, or choose your locally downloaded audio files. The demonstration is original synthetic material, not an orchestra recording.
 4. Use the setup controls to choose a common excerpt, check each instrument's name and family, and establish the reference balance before starting the listening challenge.
+
+You can always open `index.html` directly for ordinary playback without Python. If macOS says `Start.command` is not executable, run `chmod +x Start.command` once from the repository folder, then double-click it again.
 
 The large orchestra map shows one polygon per instrumental group. Each polygon brightens with that stem’s current energy, using strings blue, woodwinds green, brass red, and percussion/harp orange. Click a polygon to mute or unmute it; its fader level stays where you set it. **All off** mutes the whole orchestra. The separate mixer below provides one vertical fader per stem. Faders change playback gain. The *pp–ff* scale describes relative playback level: it does not turn a performed fortissimo timbre into a performed pianissimo. The challenge compares a mix against a chosen reference, not a uniquely correct orchestration.
 
@@ -49,13 +51,15 @@ Mappings are stored locally in the browser, separately from `.orchmix.json` sess
 
 ## Optional local server
 
-For a stable address for the piece library and MIDI, or if your browser's local-file policy prevents the app from opening, install Python 3 and run:
+The macOS `Start.command` launcher starts this server automatically. To start it manually for a stable address for the piece library and MIDI, use Python 3.9 or newer and run:
 
 ```sh
 python3 scripts/serve.py
 ```
 
-On Windows, `py scripts/serve.py` is an alternative. The server opens `http://127.0.0.1:8765/` and listens on your own computer only. Use `--no-browser` to suppress automatic opening or `--port 8766` if the port is occupied. Stop it with Ctrl+C.
+On Windows, `py scripts/serve.py` is an alternative. The server opens `http://127.0.0.1:8765/` and listens on your own computer only. Manual invocation uses your default browser; `--prefer-chromium` applies the macOS launcher's Chrome/Edge preference. Use `--no-browser` to suppress automatic opening. Stop it with Ctrl+C.
+
+An existing Orch Mix server is reused. If another program occupies the port, the server reports it and keeps the configured address rather than changing ports automatically. You can explicitly use `--port 8766`, but that creates a separate browser origin with its own library and MIDI mappings. Similarly, switching from `file://`, Edge or another browser/profile to Chrome does not migrate saved settings. If your setup already lives in Edge, keep using that browser at the same address.
 
 Only the named application assets, documentation and the example settings template are served. Audio, your local project JSON files, repository metadata and directory listings are not exposed. Choose audio through the browser's file picker or its saved folder handles even when using this server. There is no upload endpoint.
 

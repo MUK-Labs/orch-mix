@@ -4,14 +4,16 @@ A local orchestral balance lab for Adrián Artacho’s instrumentation teaching.
 
 ## Start
 
-**Open `index.html` in your desktop browser.** No build, account, npm installation or server is required. On macOS you can also double-click `Start.command`; Windows has `start.bat`.
+**On macOS, double-click `Start.command`.** With Python 3.9 or newer installed, it starts the local server and opens `http://127.0.0.1:8765/` in Chrome, then Edge if Chrome is unavailable, otherwise your default browser. Leave the Terminal window open; Ctrl+C stops the server. Double-clicking again reopens an existing Orch Mix server at the same address.
+
+For ordinary playback without Python, open `index.html` directly in your desktop browser; Windows also has `start.bat`. No build, account or npm installation is required.
 
 1. Select **Try the sound demo** to test the controls immediately. This is generated demonstration audio, not a recording of an orchestra.
 2. Select **Load stems** to open synchronized audio files or one folder containing a piece’s stems. A single `.orchmix.json` in that folder supplies the instrument labels, seating and reference levels automatically.
 3. Choose an excerpt start and length (30 seconds by default), review the instrument names and families, then **Open excerpt**.
 4. Press play. Adjust the faders with a drag, mouse wheel or arrow keys. Click a polygon to turn its part off or on without moving its fader. **All off** mutes the whole orchestra; **S** solos a part and **M** mutes it in the mixer.
 
-For the remembered piece library and MIDI controller, use **Chrome or Edge** and the same local address each time. The optional Python launcher provides one:
+For the remembered piece library and MIDI controller, use **Chrome or Edge**, the same browser profile and the same local address each time. The macOS launcher handles the server; to start it manually instead:
 
 ```sh
 python3 scripts/serve.py
@@ -124,6 +126,8 @@ Run the focused unit tests with Node.js:
 ```sh
 node --test tests/*.test.cjs
 ```
+
+The local server's startup, repeat-launch and browser fallback checks run with `python3 tests/test_serve.py`.
 
 Browser tests use Playwright as an optional development dependency; see `tests/browser-smoke.cjs` for setup, then run it and `tests/features-browser.cjs`. The feature suite simulates folder handles and MIDI input; physical controller behavior still needs checking on the target computer. The tests generate their own small audio fixtures; no third-party recordings are committed.
 
