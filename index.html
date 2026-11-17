@@ -4,7 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; media-src blob:; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
-  <title>Orch / Mix — local orchestral balance lab</title>
+  <meta name="description" content="Explore orchestral balance in your browser. Mix synchronized stems, practise listening and use a MIDI controller. No installation; your audio stays on your computer.">
+  <meta name="referrer" content="no-referrer">
+  <title>Orch / Mix — orchestral balance in your browser</title>
   <link rel="stylesheet" href="app/style.css">
   <script defer src="app/model.js"></script>
   <script defer src="app/layout.js"></script>
@@ -18,7 +20,7 @@
   <header class="topbar">
     <a class="brand" href="index.html" aria-label="Orch Mix home"><span class="brand-mark" aria-hidden="true">◒</span><span>ORCH <i>/</i> MIX</span></a>
     <span class="header-caption">THE ORCHESTRAL BALANCE LAB</span>
-    <div class="header-actions"><span class="local-badge"><b></b> On your computer</span><button id="sources-button" class="quiet">Audio sources ↗</button><button id="help-button" class="icon" aria-label="How to use Orch Mix">?</button><button id="fullscreen-button" class="icon" aria-label="Toggle fullscreen"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 7V2h5m6 0h5v5m0 6v5h-5m-6 0H2v-5"/></svg></button></div>
+    <div class="header-actions"><span class="local-badge"><b></b> Audio stays local</span><button id="sources-button" class="quiet">Audio sources ↗</button><button id="help-button" class="icon" aria-label="How to use Orch Mix">?</button><button id="fullscreen-button" class="icon" aria-label="Toggle fullscreen"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 7V2h5m6 0h5v5m0 6v5h-5m-6 0H2v-5"/></svg></button></div>
   </header>
   <main>
     <section class="workspace-heading">
@@ -40,7 +42,7 @@
       <div class="family-legend" aria-label="Instrument families"><span class="strings">● Strings</span><span class="woodwinds">● Woodwinds</span><span class="brass">● Brass</span><span class="percussion">● Percussion & harp</span></div>
       <div class="stage" id="stage">
         <svg id="orchestra-map" viewBox="0 0 1000 540" preserveAspectRatio="none" role="group" aria-label="Instrument areas, viewed from the conductor. Click an area to turn its sound on or off."><g id="orchestra-regions"></g><g class="conductor" aria-hidden="true"><circle cx="500" cy="509" r="5"/><path d="M480 520 Q500 533 520 520"/><text x="500" y="539">CONDUCTOR</text></g></svg>
-        <div id="welcome" class="welcome"><span class="welcome-icon">♫</span><h2>Your orchestra.<br>Your listening space.</h2><p>Open synchronized stems from your computer.<br>Audio stays with you, even while you mix.</p><div><button id="welcome-load" class="button">Load local audio</button><button id="demo-button" class="button secondary">Try the sound demo</button></div><small>The demo is generated sound, not an orchestral recording.</small></div>
+        <div id="welcome" class="welcome"><span class="welcome-icon">♫</span><h2>Your orchestra.<br>Your listening space.</h2><p>An orchestral balance lab in your browser.<br>No installation. Your audio stays on your computer.</p><div><button id="welcome-load" class="button">Load local audio</button><button id="demo-button" class="button secondary">Try the sound demo</button></div><small>The demo is generated sound, not an orchestral recording.</small><a class="welcome-guide" href="start.html" target="_blank" rel="noopener">New here? Get recordings &amp; start mixing ↗</a></div>
       </div>
       <div class="stage-footer"><span id="track-count">12 orchestral positions</span><button id="all-off" class="button secondary small" disabled aria-pressed="false">All off</button><button id="random-instrument" class="button secondary small" disabled title="Turn on one randomly chosen muted instrument">Random instrument</button><span id="stage-hint">Click a section to turn it on / off.</span><button id="save-button" class="quiet" disabled>Save session settings ↓</button></div>
       <p class="musician-key">One symbol per musician where counts are known · ≈ estimated · ? unknown · hover a section for details</p>
@@ -72,7 +74,7 @@
     <div class="dialog-footer"><span>Audio files are never included in saved settings.</span><button id="load-button" class="button" disabled>Open excerpt</button></div>
   </dialog>
   <dialog id="sources-dialog" aria-labelledby="sources-title"><div class="dialog-heading"><div><p class="eyebrow">START WITH A RECORDING</p><h2 id="sources-title">An orchestra, in parts.</h2></div><button class="close icon" data-close="sources-dialog" aria-label="Close audio sources">×</button></div>
-    <p class="subtle">Download from the original publisher, extract the files on your computer, then load one matching set of stems.</p>
+    <p class="subtle">Download from the original publisher, extract the files on your computer, then load one matching set of stems. No audio is uploaded.</p><p><a class="button secondary" href="start.html#recordings" target="_blank" rel="noopener">Download guide &amp; session templates ↗</a></p>
     <a class="source-card" href="https://openmusic.academy/docs/4HAB9wcKyiXNGNsmkEFRXD" target="_blank" rel="noreferrer"><span class="source-number">01</span><div><strong>Operation Beethoven ↗</strong><p>Symphony No. 4, first movement · 12 section tracks</p><small>Real orchestra · WAV / MP3 · CC BY 4.0</small></div><span class="tag">START HERE</span></a>
     <a class="source-card" href="https://zenodo.org/records/17347681" target="_blank" rel="noreferrer"><span class="source-number">02</span><div><strong>The Spheres ↗</strong><p>Mozart No. 40 & Tchaikovsky’s Romeo and Juliet</p><small>Choose StereoMix.zip · real orchestra · CC BY-SA 4.0</small></div></a>
     <a class="source-card" href="https://zenodo.org/records/13759492" target="_blank" rel="noreferrer"><span class="source-number">03</span><div><strong>SynthSOD ↗</strong><p>Rendered orchestral repertoire, with separate instruments</p><small>Choose one piece and one microphone folder · CC BY-SA 4.0 dataset</small></div></a>
@@ -80,9 +82,9 @@
   </dialog>
   <dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-heading"><h2 id="help-title">Listen your way into the orchestra.</h2><button class="close icon" data-close="help-dialog" aria-label="Close help">×</button></div>
     <ol class="help-list"><li><strong>Build your library.</strong> Remember each folder containing synchronized stems and one .orchmix.json. Choose it from Your pieces next time. Chrome or Edge may ask you to renew folder access.</li><li><strong>Explore.</strong> Click an orchestra area to turn its sound on or off. The fader level stays unchanged. All off silences the orchestra; press again to restore the selection. Random instrument adds one muted part. S solos a part. Coloured light follows audible energy.</li><li><strong>Guess the piece.</strong> Random excerpt chooses an accessible saved folder and a passage, starts playing with every part muted, and hides the title. Turn on parts one at a time. Reveal piece shows the answer without changing your mix.</li><li><strong>Use your controller.</strong> Open MIDI controller, connect, click Learn below a mixer channel and move a hardware fader or knob. Use up to 16 volume controls at once; switch banks for more parts. Learn separate CC buttons for Play / pause, All off / restore and Random instrument in the MIDI panel.</li><li><strong>Balance challenge.</strong> Set a reference mix, then recover its balance by ear from hidden offsets. Reveal balance shows relative errors; a common volume change is ignored.</li></ol>
-    <p class="tip">pp–ff is an intuitive playback scale. Turning down a recorded forte does not turn it into a performed piano: its timbre remains. The reference is a chosen interpretation, not a universal correct orchestration.</p><p class="subtle">Space: play / pause · Esc: close a panel · Settings JSON stores filenames, seating, musician counts and reference levels. For a consistent saved library and MIDI settings, use the same browser and local server address. <a href="docs/LOCAL-USE.md" target="_blank">Local setup ↗</a></p>
+    <p class="tip">pp–ff is an intuitive playback scale. Turning down a recorded forte does not turn it into a performed piano: its timbre remains. The reference is a chosen interpretation, not a universal correct orchestration.</p><p class="subtle">Space: play / pause · Esc: close a panel · Settings JSON stores filenames, seating, musician counts and reference levels. For a consistent saved library and MIDI settings, use the same browser and site address. The online and localhost versions keep separate settings. <a href="start.html" target="_blank">Getting started ↗</a></p>
     <p class="credits">Concept: Adrián Artacho · Orch / Mix</p>
   </dialog>
-  <noscript>This local audio application needs JavaScript enabled.</noscript>
+  <noscript>Orch Mix needs JavaScript enabled. Your audio is processed on your computer.</noscript>
 </body>
 </html>

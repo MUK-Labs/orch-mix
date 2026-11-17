@@ -2,7 +2,11 @@
 
 Orch Mix is an offline browser instrument for Adrián Artacho's orchestration teaching. HTML, CSS and JavaScript provide the interface and Web Audio playback. Python is optional; no account, npm installation or public hosting is required.
 
-## Open it
+## Online, without installation
+
+Open **[Orch Mix](https://muk-labs.github.io/orch-mix/)**. The app runs in your browser; selected audio stays on your computer. The **[getting-started guide](https://muk-labs.github.io/orch-mix/start.html)** includes recording downloads and session templates. Desktop Chrome or Edge supports remembered folders and MIDI over HTTPS without a local server. The online and localhost versions keep separate settings; add folders and learn controller mappings once at your chosen address.
+
+## Open it offline
 
 1. Clone or download this repository onto your computer.
 2. On macOS, double-click `Start.command` with Python 3.9 or newer installed. It runs the local server at `http://127.0.0.1:8765/` and opens Chrome, Edge if Chrome is unavailable, or your default browser as a fallback. Leave its Terminal window open; stop the server with Ctrl+C. A second launch reopens the running server. On Windows, `start.bat` opens the file directly; use the [local server](#optional-local-server) for a stable address.
@@ -25,7 +29,7 @@ The map adapts to the instruments present: empty rows disappear, crowded rows sp
 
 ## Remember your piece folders
 
-For the saved library, use a desktop browser that supports the File System Access API, such as Chrome or Edge. Run the [local server](#optional-local-server) and keep using `http://127.0.0.1:8765/` in the same browser profile. Browser storage belongs to an origin: changing the hostname, port, browser profile or browser creates a separate library and MIDI setup. Direct local-file opening can have different persistence and permission behavior.
+For the saved library, use a desktop browser that supports the File System Access API, such as Chrome or Edge. Use the online HTTPS site, or run the [local server](#optional-local-server) at `http://127.0.0.1:8765/`. Keep using the same address and browser profile. Browser storage belongs to an origin: changing the hostname, port, browser profile or browser creates a separate library and MIDI setup. Direct local-file opening can have different persistence and permission behavior.
 
 1. Choose **Remember folder** and select one piece's folder. Keep one `.orchmix.json` beside its synchronized stems to supply the labels, balance and player counts.
 2. Repeat for the other pieces you want in your library.
@@ -43,7 +47,7 @@ For a smooth classroom session, open each library entry once before the exercise
 
 ## Control the faders with MIDI
 
-Use Chrome or Edge at the stable local address above, connect the nanoKONTROL2, open **MIDI controller**, then choose **Connect MIDI** and allow MIDI input when prompted. The app requests ordinary MIDI input, not system-exclusive access, and sends no MIDI output.
+Use desktop Chrome or Edge at the online HTTPS site or stable local address above, connect the nanoKONTROL2, open **MIDI controller**, then choose **Connect MIDI** and allow MIDI input when prompted. The app requests ordinary MIDI input, not system-exclusive access, and sends no MIDI output.
 
 Select **Learn** for a mixer channel and move a physical fader or knob to assign its MIDI Control Change message. The learning movement establishes the mapping without changing the audio level; subsequent movements control that channel's volume. The app accepts up to **16 independently learned volume controls**, plus three action controls.
 

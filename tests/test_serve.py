@@ -1,6 +1,8 @@
 """Startup/relaunch checks; run with python3 tests/test_serve.py."""
 
 import importlib.util
+from html.parser import HTMLParser
+from urllib.parse import urlsplit
 from http.client import HTTPConnection
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -58,6 +60,27 @@ class ServerTests(unittest.TestCase):
             process.send_signal(signal.SIGINT)
             process.communicate(timeout=5)
         self.assertEqual(process.returncode, 0)
+
+    def test_public_pages_link_only_to_available_local_assets(self):
+        class Links(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.paths = []
+            def handle_starttag(self, tag, attrs):
+                for key, value in attrs:
+                    if key in ("href", "src") and value:
+                        url = urlsplit(value)
+                        if not url.scheme and not url.netloc and url.path:
+                            self.paths.append(url.path)
+        for page in ("index.html", "start.html"):
+            links = Links()
+            links.feed((SERVER.ROOT / page).read_text())
+            for path in links.paths:
+                with self.subTest(page=page, asset=path):
+                    self.assertFalse(path.startswith("/"), "Project Pages needs relative links")
+                    self.assertTrue((SERVER.ROOT / path).is_file())
+                    self.assertIn(path, SERVER.ASSETS, "Must also work with the offline launcher")
+        self.assertTrue((SERVER.ROOT / ".nojekyll").is_file())
 
     def test_foreign_server_is_not_reused(self):
         server = ThreadingHTTPServer(("127.0.0.1", 0), QuietHandler)

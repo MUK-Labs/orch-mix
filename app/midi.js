@@ -131,7 +131,7 @@
       if (this._access) return Promise.resolve(true);
       if (this._connecting) return this._connecting;
       if (!this.state.supported) {
-        this._error = 'Web MIDI is unavailable here. Open the local app in a browser with Web MIDI support, such as Chrome or Edge.';
+        this._error = 'Web MIDI is unavailable here. Open Orch Mix over HTTPS or localhost in a browser with Web MIDI support, such as desktop Chrome or Edge.';
         this._emit();
         return Promise.resolve(false);
       }

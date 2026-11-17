@@ -1078,3 +1078,5 @@ dialog{
 .region-light{
   transition:none}
 }
+
+.welcome-guide{display:inline-block;margin-top:15px;font-size:11px;color:var(--cream)}

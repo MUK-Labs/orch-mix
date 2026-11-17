@@ -1,8 +1,18 @@
 # Orch / Mix
 
-A local orchestral balance lab for Adrián Artacho’s instrumentation teaching. Follow each part’s energy in a large orchestra seating map, then adjust its balance with the mixer faders below. Audio is selected from your computer and stays there.
+A browser-based orchestral balance lab for Adrián Artacho’s instrumentation teaching. Follow each part’s energy in a large orchestra seating map, then adjust its balance with the mixer faders below. Audio is selected from your computer and stays there.
 
-## Start
+## Open in your browser
+
+**[Launch Orch Mix](https://muk-labs.github.io/orch-mix/)** · **[Getting started and recordings](https://muk-labs.github.io/orch-mix/start.html)**
+
+No installation, Python, account or upload is needed for the online app. Try the generated sound demo immediately, or download stems from their publishers and load them locally. The guide provides direct Beethoven WAV links and downloadable session templates. The app does not bundle or stream third-party recordings.
+
+Use desktop Chrome or Edge for remembered folders and MIDI. Saved folders and controller mappings are separate for the online site and localhost: add/relearn them once at the address you intend to use. Ordinary file loading remains available in other compatible browsers.
+
+GitHub Pages serves the static app from **main / (root)**. `.nojekyll` preserves documentation and session-template URLs without Jekyll rewriting. Pushes to main update the site through the existing Pages deployment. No build step is required.
+
+## Optional offline setup
 
 **On macOS, double-click `Start.command`.** With Python 3.9 or newer installed, it starts the local server and opens `http://127.0.0.1:8765/` in Chrome, then Edge if Chrome is unavailable, otherwise your default browser. Leave the Terminal window open; Ctrl+C stops the server. Double-clicking again reopens an existing Orch Mix server at the same address.
 
@@ -13,7 +23,7 @@ For ordinary playback without Python, open `index.html` directly in your desktop
 3. Choose an excerpt start and length (30 seconds by default), review the instrument names and families, then **Open excerpt**.
 4. Press play. Adjust the faders with a drag, mouse wheel or arrow keys. Click a polygon to turn its part off or on without moving its fader. **All off** silences the orchestra; press **Restore instruments** to return to the previous selection. **Random instrument** adds one randomly chosen part that is currently off. **S** solos a part and **M** mutes it in the mixer.
 
-For the remembered piece library and MIDI controller, use **Chrome or Edge**, the same browser profile and the same local address each time. The macOS launcher handles the server; to start it manually instead:
+For the remembered piece library and MIDI controller, use **Chrome or Edge**, the same browser profile and the same site address each time. The macOS launcher handles the server; to start it manually instead:
 
 ```sh
 python3 scripts/serve.py
@@ -65,7 +75,7 @@ An optional downloader saves Beethoven’s twelve tracks to an ignored local fol
 python3 scripts/download_beethoven.py --format wav
 ```
 
-There is no automatic online audio loading. Downloaded recordings are not part of this repository. No GitHub Pages deployment is configured; the repository can remain private.
+There is no automatic online audio loading. Downloaded recordings are not part of this repository. The public GitHub Pages site runs the same mixer; it does not publish your local recordings.
 
 ## Large recordings
 

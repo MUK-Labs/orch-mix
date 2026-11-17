@@ -10,7 +10,7 @@
   const AUDIO = /\.(wav|mp3|flac|ogg|m4a|aif|aiff|opus|webm)$/i;
   const MANIFEST = /\.orchmix\.json$/i;
   const MAX_ENTRIES = 2048, MAX_FILES = 160, MAX_DEPTH = 8, MAX_FOLDERS = 100;
-  const MEMORY_WARNING = 'The browser could not save the piece library. These folders are available for this tab only; use the local server in Chrome or Edge and allow browser storage to remember them.';
+  const MEMORY_WARNING = 'The browser could not save the piece library. These folders are available for this tab only; use the HTTPS site or local server in desktop Chrome or Edge and allow browser storage to remember them.';
 
   function error(message, code) { const result = new Error(message); result.code = code; return result; }
   function validName(name) { return typeof name === 'string' && name.length > 0 && !/[\/\\\u0000-\u001f\u007f]/.test(name) && name !== '.' && name !== '..'; }

@@ -14,6 +14,8 @@ import webbrowser
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = {
     "index.html": "text/html; charset=utf-8",
+    "start.html": "text/html; charset=utf-8",
+    "app/guide.css": "text/css; charset=utf-8",
     "app/style.css": "text/css; charset=utf-8",
     "app/app.js": "text/javascript; charset=utf-8",
     "app/model.js": "text/javascript; charset=utf-8",
@@ -25,6 +27,9 @@ ASSETS = {
     "docs/LOCAL-USE.md": "text/plain; charset=utf-8",
     "docs/AUDIO-SOURCES.md": "text/plain; charset=utf-8",
     "docs/SESSION-FORMAT.md": "text/plain; charset=utf-8",
+    "examples/beethoven-operation.orchmix.json": "application/json; charset=utf-8",
+    "examples/mozart-spheres.orchmix.json": "application/json; charset=utf-8",
+    "examples/tchaikovsky-spheres.orchmix.json": "application/json; charset=utf-8",
     "examples/beethoven-layout.json": "application/json; charset=utf-8",
 }
 
